@@ -1,75 +1,83 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Histórico de ponto</title>
-    <style>
-        table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
-        th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .extras { color: red; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <h1>Histórico de ponto</h1>
-    <p>Funcionário: {{ request.user.get_full_name|default:request.user.username }}</p>
+{% extends 'base.html' %}
 
-    <h2>Resumo de jornadas</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Total trabalhado</th>
-                <th>Intervalo</th>
-                <th>Horas extras</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for jornada in jornadas %}
-                <tr>
-                    <td>{{ jornada.data }}</td>
-                    <td>{{ jornada.total_trabalhado_fmt }}</td>
-                    <td>{{ jornada.total_intervalo_fmt }}</td>
-                    <td class="{% if jornada.horas_extras %}extras{% endif %}">
-                        {{ jornada.horas_extras_fmt }}
-                    </td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="4">Nenhuma jornada calculada ainda.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% block titulo %}Histórico de ponto{% endblock %}
 
-    <h2>Registros individuais</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Data/hora</th>
-                <th>Tipo</th>
-                <th>Observação</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for registro in registros %}
-                <tr>
-                    <td>{{ registro.data_hora }}</td>
-                    <td>{{ registro.get_tipo_display }}</td>
-                    <td>{{ registro.observacao|default:'-' }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="3">Nenhum registro encontrado.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% block conteudo %}
+<h4 class="mb-4"><i class="bi bi-list-ul"></i> Histórico de ponto</h4>
 
-    <p><a href="{% url 'bater_ponto' %}">Voltar para bater ponto</a></p>
-    {% if request.user.is_superuser or request.user.groups.all|length > 0 %}
-        <p><a href="{% url 'relatorio_jornadas' %}">Relatório de jornadas (gestor)</a></p>
-    {% endif %}
-    <p><a href="{% url 'logout' %}">Sair</a></p>
-</body>
-</html>
+<div class="card mb-4">
+    <div class="card-header fw-bold">Resumo de jornadas</div>
+    <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Data</th>
+                    <th>Total trabalhado</th>
+                    <th>Intervalo</th>
+                    <th>Horas extras</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for jornada in jornadas %}
+                    <tr>
+                        <td>{{ jornada.data }}</td>
+                        <td>{{ jornada.total_trabalhado_fmt }}</td>
+                        <td>{{ jornada.total_intervalo_fmt }}</td>
+                        <td>
+                            {% if jornada.horas_extras %}
+                                <span class="text-danger fw-bold">
+                                    {{ jornada.horas_extras_fmt }}
+                                </span>
+                            {% else %}
+                                {{ jornada.horas_extras_fmt }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">
+                            Nenhuma jornada calculada ainda.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header fw-bold">Registros individuais</div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Data/hora</th>
+                    <th>Tipo</th>
+                    <th>Observação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in registros %}
+                    <tr>
+                        <td>{{ registro.data_hora }}</td>
+                        <td>
+                            {% if registro.tipo == 'E' %}
+                                <span class="badge bg-success">Entrada</span>
+                            {% else %}
+                                <span class="badge bg-danger">Saída</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ registro.observacao|default:'-' }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">
+                            Nenhum registro encontrado.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

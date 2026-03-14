@@ -1,73 +1,90 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Relatório de jornadas</title>
-    <style>
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .extras { color: red; font-weight: bold; }
-        .totais { font-weight: bold; background-color: #f9f9f9; }
-    </style>
-</head>
-<body>
-    <h1>Relatório de jornadas</h1>
+{% extends 'base.html' %}
 
-    <form method="get">
-        <label for="funcionario">Funcionário:</label>
-        <select name="funcionario" id="funcionario" required>
-            <option value="">Selecione...</option>
-            {% for func in funcionarios %}
-                <option value="{{ func.id }}" {% if func.id|stringformat:'s' == funcionario_id %}selected{% endif %}>
-                    {{ func.get_full_name|default:func.username }}
-                </option>
-            {% endfor %}
-        </select>
+{% block titulo %}Relatório de jornadas{% endblock %}
 
-        <label for="data_inicial">De:</label>
-        <input type="date" id="data_inicial" name="data_inicial" value="{{ data_inicial }}" required>
+{% block conteudo %}
+<h4 class="mb-4"><i class="bi bi-bar-chart"></i> Relatório de jornadas</h4>
 
-        <label for="data_final">Até:</label>
-        <input type="date" id="data_final" name="data_final" value="{{ data_final }}" required>
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="funcionario" class="form-label">Funcionário</label>
+                <select name="funcionario" id="funcionario" class="form-select" required>
+                    <option value="">Selecione...</option>
+                    {% for func in funcionarios %}
+                        <option value="{{ func.id }}"
+                            {% if func.id|stringformat:'s' == funcionario_id %}selected{% endif %}>
+                            {{ func.get_full_name|default:func.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="data_inicial" class="form-label">De</label>
+                <input type="date" id="data_inicial" name="data_inicial"
+                       class="form-control" value="{{ data_inicial }}" required>
+            </div>
+            <div class="col-md-3">
+                <label for="data_final" class="form-label">Até</label>
+                <input type="date" id="data_final" name="data_final"
+                       class="form-control" value="{{ data_final }}" required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-dark w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        <button type="submit">Filtrar</button>
-    </form>
-
-    {% if jornadas %}
-        <h2>Resultados</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Total trabalhado</th>
-                    <th>Intervalo</th>
-                    <th>Horas extras</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for jornada in jornadas %}
+{% if jornadas %}
+    <div class="card">
+        <div class="card-header fw-bold">Resultados</div>
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-dark">
                     <tr>
-                        <td>{{ jornada.data }}</td>
-                        <td>{{ jornada.total_trabalhado_fmt }}</td>
-                        <td>{{ jornada.total_intervalo_fmt }}</td>
-                        <td class="{% if jornada.horas_extras %}extras{% endif %}">
-                            {{ jornada.horas_extras_fmt }}
-                        </td>
+                        <th>Data</th>
+                        <th>Total trabalhado</th>
+                        <th>Intervalo</th>
+                        <th>Horas extras</th>
                     </tr>
-                {% endfor %}
-                <tr class="totais">
-                    <td>Totais</td>
-                    <td>{{ totais.trabalhado }}</td>
-                    <td>{{ totais.intervalo }}</td>
-                    <td>{{ totais.extras }}</td>
-                </tr>
-            </tbody>
-        </table>
-    {% elif funcionario_id %}
-        <p>Nenhuma jornada encontrada para o período informado.</p>
-    {% endif %}
-
-    <p><a href="{% url 'bater_ponto' %}">Voltar para bater ponto</a></p>
-</body>
-</html>
+                </thead>
+                <tbody>
+                    {% for jornada in jornadas %}
+                        <tr>
+                            <td>{{ jornada.data }}</td>
+                            <td>{{ jornada.total_trabalhado_fmt }}</td>
+                            <td>{{ jornada.total_intervalo_fmt }}</td>
+                            <td>
+                                {% if jornada.horas_extras %}
+                                    <span class="text-danger fw-bold">
+                                        {{ jornada.horas_extras_fmt }}
+                                    </span>
+                                {% else %}
+                                    {{ jornada.horas_extras_fmt }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-secondary fw-bold">
+                    <tr>
+                        <td>Totais</td>
+                        <td>{{ totais.trabalhado }}</td>
+                        <td>{{ totais.intervalo }}</td>
+                        <td>{{ totais.extras }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+{% elif funcionario_id %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        Nenhuma jornada encontrada para o período informado.
+    </div>
+{% endif %}
+{% endblock %}

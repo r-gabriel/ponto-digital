@@ -1,35 +1,44 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Bater ponto</title>
-    <style>
-        .msg-sucesso { color: green; }
-        .msg-erro { color: red; }
-    </style>
-</head>
-<body>
-    <h1>Registro de ponto</h1>
-    <p>Olá, {{ request.user.get_full_name|default:request.user.username }}</p>
+{% extends 'base.html' %}
 
-    {% if messages %}
-        <ul style="list-style: none; padding: 0;">
-            {% for message in messages %}
-                <li class="{% if 'error' in message.tags %}msg-erro{% else %}msg-sucesso{% endif %}">
-                    {{ message }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+{% block titulo %}Bater ponto{% endblock %}
 
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" name="tipo" value="E">Registrar ENTRADA</button>
-        <button type="submit" name="tipo" value="S">Registrar SAÍDA</button>
-    </form>
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body p-4 text-center">
+                <h4 class="card-title mb-1">
+                    <i class="bi bi-clock"></i> Registro de ponto
+                </h4>
+                <p class="text-muted mb-4" id="relogio">--:--:--</p>
 
-    <p><a href="{% url 'historico_ponto' %}">Ver histórico</a></p>
-    <p><a href="{% url 'relatorio_jornadas' %}">Relatório de jornadas</a></p>
-    <p><a href="{% url 'logout' %}">Sair</a></p>
-</body>
-</html>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-3">
+                        <button type="submit" name="tipo" value="E"
+                                class="btn btn-entrada btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> Registrar ENTRADA
+                        </button>
+                        <button type="submit" name="tipo" value="S"
+                                class="btn btn-saida btn-lg">
+                            <i class="bi bi-box-arrow-right"></i> Registrar SAÍDA
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function atualizarRelogio() {
+        const agora = new Date();
+        const horas = String(agora.getHours()).padStart(2, '0');
+        const minutos = String(agora.getMinutes()).padStart(2, '0');
+        const segundos = String(agora.getSeconds()).padStart(2, '0');
+        document.getElementById('relogio').textContent = `${horas}:${minutos}:${segundos}`;
+    }
+    setInterval(atualizarRelogio, 1000);
+    atualizarRelogio();
+</script>
+{% endblock %}
