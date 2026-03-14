@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de jornadas</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .extras { color: red; font-weight: bold; }
+        .totais { font-weight: bold; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <h1>Relatório de jornadas</h1>
+
+    <form method="get">
+        <label for="funcionario">Funcionário:</label>
+        <select name="funcionario" id="funcionario" required>
+            <option value="">Selecione...</option>
+            {% for func in funcionarios %}
+                <option value="{{ func.id }}" {% if func.id|stringformat:'s' == funcionario_id %}selected{% endif %}>
+                    {{ func.get_full_name|default:func.username }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="data_inicial">De:</label>
+        <input type="date" id="data_inicial" name="data_inicial" value="{{ data_inicial }}" required>
+
+        <label for="data_final">Até:</label>
+        <input type="date" id="data_final" name="data_final" value="{{ data_final }}" required>
+
+        <button type="submit">Filtrar</button>
+    </form>
+
+    {% if jornadas %}
+        <h2>Resultados</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Total trabalhado</th>
+                    <th>Intervalo</th>
+                    <th>Horas extras</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for jornada in jornadas %}
+                    <tr>
+                        <td>{{ jornada.data }}</td>
+                        <td>{{ jornada.total_trabalhado_fmt }}</td>
+                        <td>{{ jornada.total_intervalo_fmt }}</td>
+                        <td class="{% if jornada.horas_extras %}extras{% endif %}">
+                            {{ jornada.horas_extras_fmt }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                <tr class="totais">
+                    <td>Totais</td>
+                    <td>{{ totais.trabalhado }}</td>
+                    <td>{{ totais.intervalo }}</td>
+                    <td>{{ totais.extras }}</td>
+                </tr>
+            </tbody>
+        </table>
+    {% elif funcionario_id %}
+        <p>Nenhuma jornada encontrada para o período informado.</p>
+    {% endif %}
+
+    <p><a href="{% url 'bater_ponto' %}">Voltar para bater ponto</a></p>
+</body>
+</html>
