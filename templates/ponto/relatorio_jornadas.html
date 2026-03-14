@@ -1,16 +1,18 @@
 {% extends 'base.html' %}
 
-{% block titulo %}Relatório de jornadas{% endblock %}
+{% block titulo %}Relatórios{% endblock %}
+{% block page_title %}Relatório de Jornadas{% endblock %}
 
 {% block conteudo %}
-<h4 class="mb-4"><i class="bi bi-bar-chart"></i> Relatório de jornadas</h4>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3 align-items-end">
+<!-- Filtros -->
+<div class="pd-card mb-4">
+    <div class="pd-card-title"><i class="bi bi-funnel me-1"></i> Filtrar</div>
+    <form method="get">
+        <div class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label for="funcionario" class="form-label">Funcionário</label>
-                <select name="funcionario" id="funcionario" class="form-select" required>
+                <label class="form-label">Colaborador</label>
+                <select name="funcionario" class="form-select" required>
                     <option value="">Selecione...</option>
                     {% for func in funcionarios %}
                         <option value="{{ func.id }}"
@@ -21,30 +23,67 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label for="data_inicial" class="form-label">De</label>
-                <input type="date" id="data_inicial" name="data_inicial"
-                       class="form-control" value="{{ data_inicial }}" required>
+                <label class="form-label">De</label>
+                <input type="date" name="data_inicial" class="form-control"
+                       value="{{ data_inicial }}" required>
             </div>
             <div class="col-md-3">
-                <label for="data_final" class="form-label">Até</label>
-                <input type="date" id="data_final" name="data_final"
-                       class="form-control" value="{{ data_final }}" required>
+                <label class="form-label">Até</label>
+                <input type="date" name="data_final" class="form-control"
+                       value="{{ data_final }}" required>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-dark w-100">
+                <button type="submit" class="btn btn-pd-primary w-100">
                     <i class="bi bi-search"></i> Filtrar
                 </button>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
 {% if jornadas %}
-    <div class="card">
-        <div class="card-header fw-bold">Resultados</div>
-        <div class="card-body p-0">
-            <table class="table table-hover table-striped mb-0">
-                <thead class="table-dark">
+    <!-- Cards de totais -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="pd-card text-center py-3">
+                <div style="font-size:1.5rem;font-weight:700;color:#6c2bd9;">
+                    {{ totais.trabalhado }}
+                </div>
+                <div style="font-size:.75rem;color:#6b7280;font-weight:600;text-transform:uppercase;">
+                    Total Trabalhado
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="pd-card text-center py-3">
+                <div style="font-size:1.5rem;font-weight:700;color:#0ea5e9;">
+                    {{ totais.intervalo }}
+                </div>
+                <div style="font-size:.75rem;color:#6b7280;font-weight:600;text-transform:uppercase;">
+                    Total Intervalo
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="pd-card text-center py-3">
+                <div style="font-size:1.5rem;font-weight:700;color:#dc2626;">
+                    {{ totais.extras }}
+                </div>
+                <div style="font-size:.75rem;color:#6b7280;font-weight:600;text-transform:uppercase;">
+                    Horas Extras
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="pd-card p-0" style="overflow:hidden;">
+        <div class="px-4 py-3" style="border-bottom:1px solid #f3f4f6;">
+            <span style="font-weight:600;font-size:.9rem;">Detalhamento por dia</span>
+        </div>
+        <div class="table-responsive">
+            <table class="pd-table">
+                <thead>
                     <tr>
                         <th>Data</th>
                         <th>Total trabalhado</th>
@@ -55,35 +94,28 @@
                 <tbody>
                     {% for jornada in jornadas %}
                         <tr>
-                            <td>{{ jornada.data }}</td>
+                            <td><strong>{{ jornada.data }}</strong></td>
                             <td>{{ jornada.total_trabalhado_fmt }}</td>
                             <td>{{ jornada.total_intervalo_fmt }}</td>
                             <td>
                                 {% if jornada.horas_extras %}
-                                    <span class="text-danger fw-bold">
+                                    <span class="pd-badge pd-badge-danger">
                                         {{ jornada.horas_extras_fmt }}
                                     </span>
                                 {% else %}
-                                    {{ jornada.horas_extras_fmt }}
+                                    <span class="pd-badge pd-badge-success">—</span>
                                 {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
-                <tfoot class="table-secondary fw-bold">
-                    <tr>
-                        <td>Totais</td>
-                        <td>{{ totais.trabalhado }}</td>
-                        <td>{{ totais.intervalo }}</td>
-                        <td>{{ totais.extras }}</td>
-                    </tr>
-                </tfoot>
             </table>
         </div>
     </div>
+
 {% elif funcionario_id %}
-    <div class="alert alert-warning">
-        <i class="bi bi-exclamation-triangle"></i>
+    <div class="pd-alert pd-alert-danger">
+        <i class="bi bi-exclamation-circle"></i>
         Nenhuma jornada encontrada para o período informado.
     </div>
 {% endif %}

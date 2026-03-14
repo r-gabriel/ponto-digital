@@ -1,45 +1,46 @@
 {% extends 'base.html' %}
 
-{% block titulo %}Primeiro acesso{% endblock %}
+{% block titulo %}Primeiro Acesso{% endblock %}
 
 {% block conteudo %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card border-warning">
-            <div class="card-header bg-warning text-dark fw-bold">
-                <i class="bi bi-exclamation-circle"></i>
-                Bem-vindo! Complete seu perfil para continuar.
-            </div>
-            <div class="card-body p-4">
-                <p class="text-muted mb-4">
-                    Este é seu primeiro acesso. Por segurança, atualize seus dados
-                    e defina uma senha pessoal antes de usar o sistema.
+<div class="min-vh-100 d-flex align-items-center justify-content-center"
+     style="background: linear-gradient(135deg, #1e0a3c, #6c2bd9);">
+    <div style="width:100%;max-width:460px;padding:16px;">
+        <div class="pd-card">
+            <div class="text-center mb-4">
+                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center"
+                     style="width:52px;height:52px;background:#fef9c3;border-radius:14px;">
+                    <i class="bi bi-exclamation-circle"
+                       style="font-size:1.5rem;color:#b45309;"></i>
+                </div>
+                <h5 class="fw-bold mb-1">Bem-vindo! Complete seu perfil</h5>
+                <p style="font-size:.85rem;color:#6b7280;" class="mb-0">
+                    Defina sua senha pessoal antes de usar o sistema.
                 </p>
-                <form method="post">
-                    {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ field.errors|join:', ' }}
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {{ form.non_field_errors|join:', ' }}
-                        </div>
-                    {% endif %}
-                    <div class="d-grid mt-3">
-                        <button type="submit" class="btn btn-warning fw-bold">
-                            <i class="bi bi-check-circle"></i> Salvar e continuar
-                        </button>
-                    </div>
-                </form>
             </div>
+
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div style="font-size:.78rem;color:#dc2626;margin-top:4px;">
+                                {{ field.errors|join:', ' }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                {% if form.non_field_errors %}
+                    <div class="pd-alert pd-alert-danger">
+                        {{ form.non_field_errors|join:', ' }}
+                    </div>
+                {% endif %}
+                <button type="submit" class="btn btn-pd-primary w-100 mt-2 py-2">
+                    <i class="bi bi-check-circle me-1"></i> Salvar e continuar
+                </button>
+            </form>
         </div>
     </div>
 </div>

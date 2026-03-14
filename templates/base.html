@@ -6,70 +6,476 @@
     <title>{% block titulo %}Ponto Digital{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { background-color: #f8f9fa; }
-        .navbar-brand { font-weight: bold; }
-        .card { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .btn-entrada { background-color: #198754; border-color: #198754; color: white; }
-        .btn-entrada:hover { background-color: #157347; color: white; }
-        .btn-saida { background-color: #dc3545; border-color: #dc3545; color: white; }
-        .btn-saida:hover { background-color: #bb2d3b; color: white; }
+        :root {
+            --sidebar-width: 230px;
+            --pd-purple: #6c2bd9;
+            --pd-purple-dark: #5520aa;
+            --pd-purple-light: #ede9fe;
+            --pd-sidebar-bg: #1e0a3c;
+            --pd-sidebar-hover: rgba(108,43,217,0.35);
+            --pd-sidebar-active: #6c2bd9;
+            --pd-bg: #f5f4fa;
+            --pd-card-shadow: 0 4px 24px rgba(108,43,217,0.08);
+            --pd-text: #1e1b2e;
+            --pd-muted: #6b7280;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--pd-bg);
+            color: var(--pd-text);
+            margin: 0;
+        }
+
+        /* ── Sidebar ── */
+        .pd-sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--pd-sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: width .25s ease;
+            overflow: hidden;
+        }
+
+        .pd-sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            text-decoration: none;
+        }
+
+        .pd-sidebar-logo .logo-icon {
+            width: 36px; height: 36px;
+            background: var(--pd-purple);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; color: #fff; flex-shrink: 0;
+        }
+
+        .pd-sidebar-logo span {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: .02em;
+        }
+
+        /* Perfil resumido na sidebar */
+        .pd-sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .pd-sidebar-user img,
+        .pd-sidebar-user .avatar-placeholder {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--pd-purple);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: .85rem; flex-shrink: 0;
+        }
+
+        .pd-sidebar-user .user-info {
+            overflow: hidden;
+        }
+
+        .pd-sidebar-user .user-name {
+            font-size: .82rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pd-sidebar-user .user-role {
+            font-size: .72rem;
+            color: rgba(255,255,255,0.45);
+        }
+
+        /* Nav links */
+        .pd-nav {
+            flex: 1;
+            padding: 12px 0;
+            overflow-y: auto;
+        }
+
+        .pd-nav-section {
+            padding: 8px 16px 4px;
+            font-size: .65rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.3);
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .pd-nav a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            font-size: .85rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            border-radius: 0;
+            transition: background .18s, color .18s;
+            white-space: nowrap;
+        }
+
+        .pd-nav a i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .pd-nav a:hover {
+            background: var(--pd-sidebar-hover);
+            color: #fff;
+        }
+
+        .pd-nav a.active {
+            background: var(--pd-sidebar-active);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .pd-nav a.active i { color: #fff; }
+
+        /* Botão sair no rodapé da sidebar */
+        .pd-sidebar-footer {
+            padding: 12px 0 16px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .pd-sidebar-footer a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            font-size: .85rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            transition: color .18s;
+        }
+
+        .pd-sidebar-footer a:hover { color: #f87171; }
+
+        /* ── Topbar ── */
+        .pd-topbar {
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            height: 64px;
+            background: #fff;
+            border-bottom: 1px solid #ede9fe;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            z-index: 99;
+            box-shadow: 0 1px 8px rgba(108,43,217,0.06);
+        }
+
+        .pd-topbar .page-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--pd-text);
+        }
+
+        .pd-topbar .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ── Content ── */
+        .pd-content {
+            margin-left: var(--sidebar-width);
+            margin-top: 64px;
+            padding: 28px;
+            min-height: calc(100vh - 64px);
+        }
+
+        /* ── Cards ── */
+        .pd-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: var(--pd-card-shadow);
+            border: none;
+            padding: 24px;
+        }
+
+        .pd-card-title {
+            font-size: .8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--pd-muted);
+            margin-bottom: 16px;
+        }
+
+        /* ── Botões ── */
+        .btn-pd-primary {
+            background: var(--pd-purple);
+            border: none;
+            color: #fff;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .875rem;
+            padding: 10px 22px;
+            transition: background .18s, transform .12s;
+        }
+
+        .btn-pd-primary:hover {
+            background: var(--pd-purple-dark);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn-pd-secondary {
+            background: var(--pd-purple-light);
+            border: none;
+            color: var(--pd-purple);
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: .875rem;
+            padding: 10px 22px;
+            transition: background .18s;
+        }
+
+        .btn-pd-secondary:hover {
+            background: #ddd6fe;
+            color: var(--pd-purple-dark);
+        }
+
+        .btn-entrada {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            border: none; color: #fff;
+            border-radius: 12px; font-weight: 600;
+        }
+
+        .btn-entrada:hover {
+            background: linear-gradient(135deg, #15803d, #16a34a);
+            color: #fff; transform: translateY(-1px);
+        }
+
+        .btn-saida {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            border: none; color: #fff;
+            border-radius: 12px; font-weight: 600;
+        }
+
+        .btn-saida:hover {
+            background: linear-gradient(135deg, #b91c1c, #dc2626);
+            color: #fff; transform: translateY(-1px);
+        }
+
+        /* ── Inputs ── */
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1.5px solid #e5e7eb;
+            padding: 10px 14px;
+            font-size: .875rem;
+            transition: border-color .18s, box-shadow .18s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--pd-purple);
+            box-shadow: 0 0 0 3px rgba(108,43,217,0.12);
+            outline: none;
+        }
+
+        .form-label {
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--pd-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        /* ── Tabelas ── */
+        .pd-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+
+        .pd-table thead th {
+            background: var(--pd-purple-light);
+            color: var(--pd-purple);
+            font-size: .72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            padding: 12px 16px;
+            border: none;
+        }
+
+        .pd-table thead th:first-child { border-radius: 10px 0 0 10px; }
+        .pd-table thead th:last-child  { border-radius: 0 10px 10px 0; }
+
+        .pd-table tbody tr {
+            border-bottom: 1px solid #f3f4f6;
+            transition: background .15s;
+        }
+
+        .pd-table tbody tr:hover { background: #faf8ff; }
+
+        .pd-table tbody td {
+            padding: 13px 16px;
+            font-size: .875rem;
+            color: var(--pd-text);
+            vertical-align: middle;
+        }
+
+        /* ── Badges ── */
+        .pd-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        .pd-badge-success { background: #dcfce7; color: #16a34a; }
+        .pd-badge-warning { background: #fef9c3; color: #b45309; }
+        .pd-badge-danger  { background: #fee2e2; color: #dc2626; }
+        .pd-badge-purple  { background: var(--pd-purple-light); color: var(--pd-purple); }
+
+        /* ── Alerts ── */
+        .pd-alert {
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: .875rem;
+            font-weight: 500;
+            border: none;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pd-alert-success { background: #dcfce7; color: #166534; }
+        .pd-alert-danger  { background: #fee2e2; color: #b91c1c; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .pd-sidebar { width: 64px; }
+            .pd-sidebar-logo span,
+            .pd-sidebar-user .user-info,
+            .pd-nav a span,
+            .pd-sidebar-footer a span,
+            .pd-nav-section { display: none; }
+            .pd-topbar, .pd-content { left: 64px; margin-left: 64px; }
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="{% url 'bater_ponto' %}">
-            <i class="bi bi-clock-history"></i> Ponto Digital
-        </a>
-        {% if request.user.is_authenticated %}
-        <div class="navbar-text text-white me-3">
-            <i class="bi bi-person-circle"></i>
-            {{ request.user.get_full_name|default:request.user.username }}
-        </div>
-        <div class="d-flex gap-2 align-items-center">
-            {% if request.user.is_superuser or request.user.groups.all %}
-                <a href="{% url 'lista_colaboradores' %}" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-people"></i> Colaboradores
-                </a>
-                <a href="{% url 'relatorio_jornadas' %}" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-bar-chart"></i> Relatório
-                </a>
-            {% endif %}
-            <a href="{% url 'historico_ponto' %}" class="btn btn-outline-light btn-sm">
-                <i class="bi bi-list-ul"></i> Histórico
-            </a>
-            <a href="{% url 'meu_perfil' %}" class="btn btn-outline-light btn-sm">
-                {% if request.user.perfil.foto %}
-                    <img src="{{ request.user.perfil.foto.url }}"
-                        class="rounded-circle"
-                        style="width: 22px; height: 22px; object-fit: cover;">
-                {% else %}
-                    <i class="bi bi-person-circle"></i>
-                {% endif %}
-                Perfil
-            </a>
-            <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">
-                <i class="bi bi-box-arrow-right"></i> Sair
-            </a>
-        </div>
-        {% endif %}
-    </div>
-</nav>
+{% if request.user.is_authenticated %}
 
-<div class="container">
+<!-- Sidebar -->
+<aside class="pd-sidebar">
+    <a class="pd-sidebar-logo" href="{% url 'bater_ponto' %}">
+        <div class="logo-icon"><i class="bi bi-clock-history"></i></div>
+        <span>Ponto Digital</span>
+    </a>
+
+    {% if request.user.perfil.foto %}
+        <div class="pd-sidebar-user">
+            <img src="{{ request.user.perfil.foto.url }}" alt="Foto">
+            <div class="user-info">
+                <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                <div class="user-role">{{ request.user.perfil.cargo|default:'Colaborador' }}</div>
+            </div>
+        </div>
+    {% else %}
+        <div class="pd-sidebar-user">
+            <div class="avatar-placeholder">
+                <i class="bi bi-person-fill"></i>
+            </div>
+            <div class="user-info">
+                <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                <div class="user-role">{{ request.user.perfil.cargo|default:'Colaborador' }}</div>
+            </div>
+        </div>
+    {% endif %}
+
+    <nav class="pd-nav">
+        <div class="pd-nav-section">Principal</div>
+        <a href="{% url 'bater_ponto' %}"
+           class="{% if request.resolver_match.url_name == 'bater_ponto' %}active{% endif %}">
+            <i class="bi bi-fingerprint"></i><span>Bater Ponto</span>
+        </a>
+        <a href="{% url 'historico_ponto' %}"
+           class="{% if request.resolver_match.url_name == 'historico_ponto' %}active{% endif %}">
+            <i class="bi bi-calendar3"></i><span>Histórico</span>
+        </a>
+        <a href="{% url 'meu_perfil' %}"
+           class="{% if request.resolver_match.url_name == 'meu_perfil' %}active{% endif %}">
+            <i class="bi bi-person-circle"></i><span>Meu Perfil</span>
+        </a>
+
+        {% if request.user.is_superuser or request.user.groups.all %}
+        <div class="pd-nav-section">Gestão</div>
+        <a href="{% url 'lista_colaboradores' %}"
+           class="{% if request.resolver_match.url_name == 'lista_colaboradores' or request.resolver_match.url_name == 'cadastrar_colaborador' or request.resolver_match.url_name == 'editar_colaborador' %}active{% endif %}">
+            <i class="bi bi-people"></i><span>Colaboradores</span>
+        </a>
+        <a href="{% url 'relatorio_jornadas' %}"
+           class="{% if request.resolver_match.url_name == 'relatorio_jornadas' %}active{% endif %}">
+            <i class="bi bi-bar-chart-line"></i><span>Relatórios</span>
+        </a>
+        {% endif %}
+    </nav>
+
+    <div class="pd-sidebar-footer">
+        <a href="{% url 'logout' %}">
+            <i class="bi bi-box-arrow-left"></i><span>Sair</span>
+        </a>
+    </div>
+</aside>
+
+<!-- Topbar -->
+<header class="pd-topbar">
+    <span class="page-title">{% block page_title %}Ponto Digital{% endblock %}</span>
+    <div class="topbar-actions">
+        {% block topbar_actions %}{% endblock %}
+    </div>
+</header>
+
+{% endif %}
+
+<!-- Conteúdo principal -->
+<main class="{% if request.user.is_authenticated %}pd-content{% else %}container py-5{% endif %}">
     {% if messages %}
         {% for message in messages %}
-            <div class="alert {% if 'error' in message.tags %}alert-danger{% else %}alert-success{% endif %} alert-dismissible fade show" role="alert">
+            <div class="pd-alert {% if 'error' in message.tags %}pd-alert-danger{% else %}pd-alert-success{% endif %}">
+                <i class="bi {% if 'error' in message.tags %}bi-x-circle{% else %}bi-check-circle{% endif %}"></i>
                 {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         {% endfor %}
     {% endif %}
 
     {% block conteudo %}{% endblock %}
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
