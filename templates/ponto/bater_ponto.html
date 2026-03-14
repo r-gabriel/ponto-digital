@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Bater ponto</title>
+</head>
+<body>
+    <h1>Registro de ponto</h1>
+    <p>Olá, {{ request.user.get_full_name|default:request.user.username }}</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" name="tipo" value="E">Registrar ENTRADA</button>
+        <button type="submit" name="tipo" value="S">Registrar SAÍDA</button>
+    </form>
+
+    <p><a href="{% url 'historico_ponto' %}">Ver histórico</a></p>
+    <p><a href="{% url 'logout' %}">Sair</a></p>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Histórico de ponto</title>
+</head>
+<body>
+    <h1>Histórico de ponto</h1>
+    <p>Funcionário: {{ request.user.get_full_name|default:request.user.username }}</p>
+
+    <table border="1" cellpadding="5">
+        <thead>
+            <tr>
+                <th>Data/hora</th>
+                <th>Tipo</th>
+                <th>Observação</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in registros %}
+                <tr>
+                    <td>{{ registro.data_hora }}</td>
+                    <td>{{ registro.get_tipo_display }}</td>
+                    <td>{{ registro.observacao|default:'-' }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">Nenhum registro encontrado.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p><a href="{% url 'bater_ponto' %}">Voltar para bater ponto</a></p>
+    <p><a href="{% url 'logout' %}">Sair</a></p>
+</body>
+</html>
