@@ -1,4 +1,6 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect
 from django.utils import timezone
 
@@ -10,14 +12,24 @@ def bater_ponto(request):
     if request.method == 'POST':
         tipo = request.POST.get('tipo')
 
-        # Segurança mínima: aceita só 'E' ou 'S'
         if tipo in ['E', 'S']:
-            RegistroPonto.objects.create(
-                funcionario=request.user,
-                tipo=tipo,
-                data_hora=timezone.now()
-            )
-        return redirect('historico_ponto')
+            try:
+                registro = RegistroPonto(
+                    funcionario=request.user,
+                    tipo=tipo,
+                )
+                registro.full_clean()   # dispara o clean() com validação
+                registro.save()         # só salva se passar na validação
+                messages.success(request, 'Ponto registrado com sucesso.')
+                return redirect('historico_ponto')
+
+            except ValidationError as e:
+                # e.messages é sempre uma lista de strings
+                for erro in e.messages:
+                    messages.error(request, erro)
+
+        else:
+            messages.error(request, 'Tipo de registro inválido.')
 
     return render(request, 'ponto/bater_ponto.html')
 
@@ -26,6 +38,6 @@ def bater_ponto(request):
 def historico_ponto(request):
     registros = RegistroPonto.objects.filter(
         funcionario=request.user
-    ).order_by('-data_hora')[:50]  # últimos 50 registros
+    ).order_by('-data_hora')[:50]
 
     return render(request, 'ponto/historico_ponto.html', {'registros': registros})

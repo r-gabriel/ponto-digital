@@ -3,10 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <title>Bater ponto</title>
+    <style>
+        .msg-sucesso { color: green; }
+        .msg-erro { color: red; }
+    </style>
 </head>
 <body>
     <h1>Registro de ponto</h1>
     <p>Olá, {{ request.user.get_full_name|default:request.user.username }}</p>
+
+    {% if messages %}
+        <ul style="list-style: none; padding: 0;">
+            {% for message in messages %}
+                <li class="{% if 'error' in message.tags %}msg-erro{% else %}msg-sucesso{% endif %}">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 
     <form method="post">
         {% csrf_token %}
