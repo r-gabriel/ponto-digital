@@ -133,3 +133,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'bater_ponto'
 LOGOUT_REDIRECT_URL = 'login'
+
+handler403 = 'django.views.defaults.permission_denied'

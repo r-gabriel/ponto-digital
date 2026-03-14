@@ -1,12 +1,13 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.db.models import Sum
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from django.contrib.auth.models import User
-from django.db.models import Sum
 from datetime import datetime
 
+from .decorators import gestor_required
 from .models import RegistroPonto, JornadaDiaria
 
 
@@ -24,7 +25,6 @@ def bater_ponto(request):
                 registro.full_clean()
                 registro.save()
 
-                # Recalcula a jornada do dia automaticamente
                 hoje = timezone.localdate()
                 jornada, _ = JornadaDiaria.objects.get_or_create(
                     funcionario=request.user,
@@ -50,7 +50,6 @@ def historico_ponto(request):
         funcionario=request.user
     ).order_by('-data_hora')[:50]
 
-    # Busca as jornadas calculadas para exibir no histórico
     jornadas = JornadaDiaria.objects.filter(
         funcionario=request.user
     ).order_by('-data')[:30]
@@ -60,9 +59,9 @@ def historico_ponto(request):
         'jornadas': jornadas,
     })
 
-@login_required
+
+@gestor_required   # <- somente gestor ou superusuário acessa
 def relatorio_jornadas(request):
-    # Parâmetros do filtro
     funcionario_id = request.GET.get('funcionario')
     data_inicial = request.GET.get('data_inicial')
     data_final = request.GET.get('data_final')
@@ -81,13 +80,6 @@ def relatorio_jornadas(request):
                 data__range=(data_ini, data_fim)
             ).order_by('data')
 
-            # Agregados
-            agregados = jornadas.aggregate(
-                trabalhado=Sum('total_trabalhado'),
-                intervalo=Sum('total_intervalo'),
-                extras=Sum('horas_extras'),
-            )
-
             def fmt(dur):
                 if not dur:
                     return '--:--'
@@ -96,6 +88,12 @@ def relatorio_jornadas(request):
                 minutos = resto // 60
                 return f'{horas:02d}:{minutos:02d}'
 
+            agregados = jornadas.aggregate(
+                trabalhado=Sum('total_trabalhado'),
+                intervalo=Sum('total_intervalo'),
+                extras=Sum('horas_extras'),
+            )
+
             totais = {
                 'trabalhado': fmt(agregados['trabalhado']),
                 'intervalo': fmt(agregados['intervalo']),
@@ -103,7 +101,7 @@ def relatorio_jornadas(request):
             }
 
         except ValueError:
-            messages.error(request, 'Datas em formato inválido. Use o seletor de datas.')
+            messages.error(request, 'Datas em formato inválido.')
 
     return render(request, 'ponto/relatorio_jornadas.html', {
         'funcionarios': funcionarios,

@@ -67,7 +67,9 @@
     </table>
 
     <p><a href="{% url 'bater_ponto' %}">Voltar para bater ponto</a></p>
-    <p><a href="{% url 'relatorio_jornadas' %}">Relatório de jornadas (gestor)</a></p>
+    {% if request.user.is_superuser or request.user.groups.all|length > 0 %}
+        <p><a href="{% url 'relatorio_jornadas' %}">Relatório de jornadas (gestor)</a></p>
+    {% endif %}
     <p><a href="{% url 'logout' %}">Sair</a></p>
 </body>
 </html>
