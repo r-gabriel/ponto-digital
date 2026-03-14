@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect
 from django.utils import timezone
 
-from .models import RegistroPonto
+from .models import RegistroPonto, JornadaDiaria
 
 
 @login_required
@@ -18,16 +18,23 @@ def bater_ponto(request):
                     funcionario=request.user,
                     tipo=tipo,
                 )
-                registro.full_clean()   # dispara o clean() com validação
-                registro.save()         # só salva se passar na validação
+                registro.full_clean()
+                registro.save()
+
+                # Recalcula a jornada do dia automaticamente
+                hoje = timezone.localdate()
+                jornada, _ = JornadaDiaria.objects.get_or_create(
+                    funcionario=request.user,
+                    data=hoje
+                )
+                jornada.calcular()
+
                 messages.success(request, 'Ponto registrado com sucesso.')
                 return redirect('historico_ponto')
 
             except ValidationError as e:
-                # e.messages é sempre uma lista de strings
                 for erro in e.messages:
                     messages.error(request, erro)
-
         else:
             messages.error(request, 'Tipo de registro inválido.')
 
@@ -40,4 +47,12 @@ def historico_ponto(request):
         funcionario=request.user
     ).order_by('-data_hora')[:50]
 
-    return render(request, 'ponto/historico_ponto.html', {'registros': registros})
+    # Busca as jornadas calculadas para exibir no histórico
+    jornadas = JornadaDiaria.objects.filter(
+        funcionario=request.user
+    ).order_by('-data')[:30]
+
+    return render(request, 'ponto/historico_ponto.html', {
+        'registros': registros,
+        'jornadas': jornadas,
+    })

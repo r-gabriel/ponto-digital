@@ -3,12 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <title>Histórico de ponto</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+        th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .extras { color: red; font-weight: bold; }
+    </style>
 </head>
 <body>
     <h1>Histórico de ponto</h1>
     <p>Funcionário: {{ request.user.get_full_name|default:request.user.username }}</p>
 
-    <table border="1" cellpadding="5">
+    <h2>Resumo de jornadas</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Total trabalhado</th>
+                <th>Intervalo</th>
+                <th>Horas extras</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for jornada in jornadas %}
+                <tr>
+                    <td>{{ jornada.data }}</td>
+                    <td>{{ jornada.total_trabalhado_fmt }}</td>
+                    <td>{{ jornada.total_intervalo_fmt }}</td>
+                    <td class="{% if jornada.horas_extras %}extras{% endif %}">
+                        {{ jornada.horas_extras_fmt }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">Nenhuma jornada calculada ainda.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Registros individuais</h2>
+    <table>
         <thead>
             <tr>
                 <th>Data/hora</th>
