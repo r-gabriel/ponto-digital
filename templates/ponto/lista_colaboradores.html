@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Colaboradores{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-people"></i> Colaboradores</h4>
+    <a href="{% url 'cadastrar_colaborador' %}" class="btn btn-dark btn-sm">
+        <i class="bi bi-person-plus"></i> Novo colaborador
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Nome</th>
+                    <th>Usuário</th>
+                    <th>Cargo</th>
+                    <th>Turno</th>
+                    <th>Admissão</th>
+                    <th>Valor/hora</th>
+                    <th>Jornada</th>
+                    <th>Situação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for colaborador in colaboradores %}
+                    <tr>
+                        <td>{{ colaborador.get_full_name|default:colaborador.username }}</td>
+                        <td>{{ colaborador.username }}</td>
+                        <td>{{ colaborador.perfil.cargo|default:'-' }}</td>
+                        <td>{{ colaborador.perfil.get_turno_display|default:'-' }}</td>
+                        <td>{{ colaborador.perfil.data_admissao|default:'-' }}</td>
+                        <td>
+                            {% if colaborador.perfil.valor_hora %}
+                                R$ {{ colaborador.perfil.valor_hora }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ colaborador.perfil.jornada_diaria_horas }}h</td>
+                        <td>
+                            {% if colaborador.perfil.primeiro_acesso %}
+                                <span class="badge bg-warning text-dark">
+                                    Aguardando 1º acesso
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">
+                            Nenhum colaborador cadastrado.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

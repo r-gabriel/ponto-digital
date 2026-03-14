@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta
 
@@ -11,6 +13,47 @@ except ImportError:
 
 
 FUSO_BRASILIA = ZoneInfo('America/Sao_Paulo')
+
+
+class Perfil(models.Model):
+    TURNO_CHOICES = (
+        ('M', 'Manhã'),
+        ('T', 'Tarde'),
+        ('N', 'Noturno'),
+        ('I', 'Integral'),
+    )
+
+    usuario = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='perfil'
+    )
+    cargo = models.CharField(max_length=100, blank=True)
+    data_admissao = models.DateField(null=True, blank=True)
+    turno = models.CharField(max_length=1, choices=TURNO_CHOICES, blank=True)
+    valor_hora = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True
+    )
+    jornada_diaria_horas = models.PositiveSmallIntegerField(
+        default=8,
+        help_text='Jornada diária esperada em horas (ex: 8)'
+    )
+    # Controla se o colaborador ainda precisa trocar a senha e completar o perfil
+    primeiro_acesso = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Perfil'
+        verbose_name_plural = 'Perfis'
+
+    def __str__(self):
+        return f'Perfil de {self.usuario.username}'
+
+
+# Cria automaticamente o Perfil quando um novo User é criado
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def criar_perfil(sender, instance, created, **kwargs):
+    if created:
+        Perfil.objects.get_or_create(usuario=instance)
 
 
 class RegistroPonto(models.Model):
@@ -66,8 +109,6 @@ class JornadaDiaria(models.Model):
         related_name='jornadas'
     )
     data = models.DateField()
-
-    # Campos calculados — preenchidos automaticamente
     total_trabalhado = models.DurationField(null=True, blank=True)
     total_intervalo = models.DurationField(null=True, blank=True)
     horas_extras = models.DurationField(null=True, blank=True)
@@ -83,13 +124,6 @@ class JornadaDiaria(models.Model):
         return f'{self.funcionario} - {self.data}'
 
     def calcular(self):
-        """
-        Lê os registros de ponto do dia desse funcionário
-        e calcula total trabalhado, intervalo e horas extras.
-        Padrão CLT:
-          - Intervalo obrigatório de 1h para jornadas acima de 6h
-          - Horas extras = total trabalhado - jornada esperada (se positivo)
-        """
         registros = list(
             RegistroPonto.objects.filter(
                 funcionario=self.funcionario,
@@ -98,26 +132,29 @@ class JornadaDiaria(models.Model):
         )
 
         if len(registros) < 2:
-            # Dia incompleto, não calcula
             self.total_trabalhado = None
             self.total_intervalo = None
             self.horas_extras = None
             self.save()
             return
 
+        # Pega a jornada esperada do perfil do funcionário
+        try:
+            horas = self.funcionario.perfil.jornada_diaria_horas
+            self.jornada_esperada = timedelta(hours=horas)
+        except Perfil.DoesNotExist:
+            self.jornada_esperada = timedelta(hours=8)
+
         total_trabalhado = timedelta()
         total_intervalo = timedelta()
 
-        # Percorre os pares E/S
         for i in range(0, len(registros) - 1, 2):
             entrada = registros[i]
             saida = registros[i + 1]
 
-            # Garante que o par está correto
             if entrada.tipo == 'E' and saida.tipo == 'S':
                 total_trabalhado += saida.data_hora - entrada.data_hora
 
-            # Calcula intervalo entre saída e próxima entrada
             if i + 2 < len(registros):
                 proxima_entrada = registros[i + 2]
                 total_intervalo += proxima_entrada.data_hora - saida.data_hora
@@ -125,14 +162,12 @@ class JornadaDiaria(models.Model):
         self.total_trabalhado = total_trabalhado
         self.total_intervalo = total_intervalo
 
-        # Horas extras: somente se trabalhou além da jornada esperada
         diferenca = total_trabalhado - self.jornada_esperada
         self.horas_extras = diferenca if diferenca > timedelta(0) else timedelta(0)
 
         self.save()
 
     def formatar_duracao(self, duracao):
-        """Formata timedelta para exibição como HH:MM"""
         if duracao is None:
             return '--:--'
         total_segundos = int(duracao.total_seconds())

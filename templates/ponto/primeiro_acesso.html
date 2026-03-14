@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Primeiro acesso{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark fw-bold">
+                <i class="bi bi-exclamation-circle"></i>
+                Bem-vindo! Complete seu perfil para continuar.
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted mb-4">
+                    Este é seu primeiro acesso. Por segurança, atualize seus dados
+                    e defina uma senha pessoal antes de usar o sistema.
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|join:', ' }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors|join:', ' }}
+                        </div>
+                    {% endif %}
+                    <div class="d-grid mt-3">
+                        <button type="submit" class="btn btn-warning fw-bold">
+                            <i class="bi bi-check-circle"></i> Salvar e continuar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

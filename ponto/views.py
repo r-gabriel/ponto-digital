@@ -3,19 +3,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from datetime import datetime
 
 from .decorators import gestor_required
-from .models import RegistroPonto, JornadaDiaria
+from .forms import CadastroColaboradorForm, PerfilColaboradorForm, PrimeiroAcessoForm
+from .models import RegistroPonto, JornadaDiaria, Perfil
 
 
 @login_required
 def bater_ponto(request):
+    # Redireciona para o primeiro acesso se necessário
+    if hasattr(request.user, 'perfil') and request.user.perfil.primeiro_acesso:
+        return redirect('primeiro_acesso')
+
     if request.method == 'POST':
         tipo = request.POST.get('tipo')
-
         if tipo in ['E', 'S']:
             try:
                 registro = RegistroPonto(
@@ -60,7 +64,7 @@ def historico_ponto(request):
     })
 
 
-@gestor_required   # <- somente gestor ou superusuário acessa
+@gestor_required
 def relatorio_jornadas(request):
     funcionario_id = request.GET.get('funcionario')
     data_inicial = request.GET.get('data_inicial')
@@ -111,3 +115,81 @@ def relatorio_jornadas(request):
         'data_inicial': data_inicial or '',
         'data_final': data_final or '',
     })
+
+
+@gestor_required
+def cadastrar_colaborador(request):
+    if request.method == 'POST':
+        user_form = CadastroColaboradorForm(request.POST)
+        perfil_form = PerfilColaboradorForm(request.POST)
+
+        if user_form.is_valid() and perfil_form.is_valid():
+            usuario = user_form.save()
+
+            # O perfil já foi criado pelo signal, só atualiza os dados
+            perfil = usuario.perfil
+            perfil.cargo = perfil_form.cleaned_data['cargo']
+            perfil.data_admissao = perfil_form.cleaned_data['data_admissao']
+            perfil.turno = perfil_form.cleaned_data['turno']
+            perfil.valor_hora = perfil_form.cleaned_data['valor_hora']
+            perfil.jornada_diaria_horas = perfil_form.cleaned_data['jornada_diaria_horas']
+            perfil.primeiro_acesso = True
+            perfil.save()
+
+            messages.success(
+                request,
+                f'Colaborador {usuario.get_full_name() or usuario.username} '
+                f'cadastrado com sucesso.'
+            )
+            return redirect('lista_colaboradores')
+    else:
+        user_form = CadastroColaboradorForm()
+        perfil_form = PerfilColaboradorForm()
+
+    return render(request, 'ponto/cadastrar_colaborador.html', {
+        'user_form': user_form,
+        'perfil_form': perfil_form,
+    })
+
+
+@gestor_required
+def lista_colaboradores(request):
+    colaboradores = User.objects.select_related('perfil').order_by('first_name', 'last_name')
+    return render(request, 'ponto/lista_colaboradores.html', {
+        'colaboradores': colaboradores,
+    })
+
+
+@login_required
+def primeiro_acesso(request):
+    # Se não é primeiro acesso, manda para o ponto
+    if not request.user.perfil.primeiro_acesso:
+        return redirect('bater_ponto')
+
+    if request.method == 'POST':
+        form = PrimeiroAcessoForm(request.POST)
+        if form.is_valid():
+            user = request.user
+            user.first_name = form.cleaned_data['first_name']
+            user.last_name = form.cleaned_data['last_name']
+            user.email = form.cleaned_data['email']
+            user.set_password(form.cleaned_data['nova_senha'])
+            user.save()
+
+            # Marca que o primeiro acesso foi concluído
+            user.perfil.primeiro_acesso = False
+            user.perfil.save()
+
+            messages.success(
+                request,
+                'Perfil atualizado com sucesso. Faça login com sua nova senha.'
+            )
+            return redirect('login')
+    else:
+        form = PrimeiroAcessoForm(initial={
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+            'email': request.user.email,
+        })
+
+    return render(request, 'ponto/primeiro_acesso.html', {'form': form})

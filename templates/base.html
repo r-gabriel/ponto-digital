@@ -34,6 +34,14 @@
                     <i class="bi bi-bar-chart"></i> Relatório
                 </a>
             {% endif %}
+            {% if request.user.is_superuser or request.user.groups.all %}
+                <a href="{% url 'lista_colaboradores' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-people"></i> Colaboradores
+                </a>
+                <a href="{% url 'relatorio_jornadas' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-bar-chart"></i> Relatório
+                </a>
+            {% endif %}
             <a href="{% url 'historico_ponto' %}" class="btn btn-outline-light btn-sm">
                 <i class="bi bi-list-ul"></i> Histórico
             </a>
