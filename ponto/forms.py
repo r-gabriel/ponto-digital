@@ -101,3 +101,48 @@ class PrimeiroAcessoForm(forms.Form):
             raise forms.ValidationError('As senhas não conferem.')
 
         return cleaned_data
+    
+class EditarUsuarioForm(forms.ModelForm):
+    """
+    Formulário para o gestor editar os dados pessoais do colaborador.
+    """
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email')
+        labels = {
+            'first_name': 'Nome',
+            'last_name': 'Sobrenome',
+            'email': 'E-mail',
+        }
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
+
+class EditarPerfilForm(forms.ModelForm):
+    """
+    Formulário para o gestor editar os dados contratuais do colaborador.
+    """
+    class Meta:
+        model = Perfil
+        fields = ('cargo', 'data_admissao', 'turno', 'valor_hora', 'jornada_diaria_horas')
+        labels = {
+            'cargo': 'Cargo',
+            'data_admissao': 'Data de admissão',
+            'turno': 'Turno',
+            'valor_hora': 'Valor por hora (R$)',
+            'jornada_diaria_horas': 'Jornada diária (horas)',
+        }
+        widgets = {
+            'cargo': forms.TextInput(attrs={'class': 'form-control'}),
+            'data_admissao': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'}
+            ),
+            'turno': forms.Select(attrs={'class': 'form-select'}),
+            'valor_hora': forms.NumberInput(
+                attrs={'class': 'form-control', 'step': '0.01'}
+            ),
+            'jornada_diaria_horas': forms.NumberInput(attrs={'class': 'form-control'}),
+        }

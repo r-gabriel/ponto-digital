@@ -8,7 +8,7 @@ from django.utils import timezone
 from datetime import datetime
 
 from .decorators import gestor_required
-from .forms import CadastroColaboradorForm, PerfilColaboradorForm, PrimeiroAcessoForm
+from .forms import CadastroColaboradorForm, PerfilColaboradorForm, PrimeiroAcessoForm, EditarPerfilForm, EditarUsuarioForm
 from .models import RegistroPonto, JornadaDiaria, Perfil
 
 
@@ -193,3 +193,33 @@ def primeiro_acesso(request):
         })
 
     return render(request, 'ponto/primeiro_acesso.html', {'form': form})
+
+@gestor_required
+def editar_colaborador(request, user_id):
+    colaborador = get_object_or_404(User, pk=user_id)
+
+    # Garante que o perfil existe
+    perfil, _ = Perfil.objects.get_or_create(usuario=colaborador)
+
+    if request.method == 'POST':
+        user_form = EditarUsuarioForm(request.POST, instance=colaborador)
+        perfil_form = EditarPerfilForm(request.POST, instance=perfil)
+
+        if user_form.is_valid() and perfil_form.is_valid():
+            user_form.save()
+            perfil_form.save()
+            messages.success(
+                request,
+                f'Dados de {colaborador.get_full_name() or colaborador.username} '
+                f'atualizados com sucesso.'
+            )
+            return redirect('lista_colaboradores')
+    else:
+        user_form = EditarUsuarioForm(instance=colaborador)
+        perfil_form = EditarPerfilForm(instance=perfil)
+
+    return render(request, 'ponto/editar_colaborador.html', {
+        'user_form': user_form,
+        'perfil_form': perfil_form,
+        'colaborador': colaborador,
+    })
