@@ -9,4 +9,5 @@ urlpatterns = [
     path('colaboradores/novo/', views.cadastrar_colaborador, name='cadastrar_colaborador'),
     path('colaboradores/<int:user_id>/editar/', views.editar_colaborador, name='editar_colaborador'),
     path('primeiro-acesso/', views.primeiro_acesso, name='primeiro_acesso'),
+    path('perfil/', views.meu_perfil, name='meu_perfil'),
 ]

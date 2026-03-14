@@ -38,8 +38,13 @@ class Perfil(models.Model):
         default=8,
         help_text='Jornada diária esperada em horas (ex: 8)'
     )
-    # Controla se o colaborador ainda precisa trocar a senha e completar o perfil
     primeiro_acesso = models.BooleanField(default=True)
+    foto = models.ImageField(
+        upload_to='fotos_perfil/',
+        null=True,
+        blank=True,
+        verbose_name='Foto de perfil'
+    )
 
     class Meta:
         verbose_name = 'Perfil'
@@ -47,7 +52,6 @@ class Perfil(models.Model):
 
     def __str__(self):
         return f'Perfil de {self.usuario.username}'
-
 
 # Cria automaticamente o Perfil quando um novo User é criado
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

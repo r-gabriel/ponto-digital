@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Meu perfil{% endblock %}
+
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+
+        <h4 class="mb-4"><i class="bi bi-person-badge"></i> Meu perfil</h4>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+
+                    <!-- Foto -->
+                    <div class="col-md-3 text-center mb-3 mb-md-0">
+                        {% if perfil.foto %}
+                            <img src="{{ perfil.foto.url }}"
+                                 alt="Foto de perfil"
+                                 class="rounded-circle img-thumbnail"
+                                 style="width: 130px; height: 130px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center
+                                        justify-content-center mx-auto"
+                                 style="width: 130px; height: 130px;">
+                                <i class="bi bi-person-fill text-white" style="font-size: 4rem;"></i>
+                            </div>
+                        {% endif %}
+
+                        <!-- Formulário de foto -->
+                        <form method="post" enctype="multipart/form-data" class="mt-3">
+                            {% csrf_token %}
+                            {{ form.foto }}
+                            <button type="submit" class="btn btn-outline-dark btn-sm mt-2 w-100">
+                                <i class="bi bi-camera"></i>
+                                {% if perfil.foto %}Alterar foto{% else %}Inserir foto{% endif %}
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Nome e usuário -->
+                    <div class="col-md-9">
+                        <h4 class="mb-1">
+                            {{ request.user.get_full_name|default:request.user.username }}
+                        </h4>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-at"></i> {{ request.user.username }}
+                        </p>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-envelope"></i>
+                            {{ request.user.email|default:'Não informado' }}
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Dados contratuais (somente leitura) -->
+        <div class="card">
+            <div class="card-header fw-bold">
+                <i class="bi bi-briefcase"></i> Dados contratuais
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Cargo</label>
+                        <p class="fw-semibold">{{ perfil.cargo|default:'Não informado' }}</p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Turno</label>
+                        <p class="fw-semibold">{{ perfil.get_turno_display|default:'Não informado' }}</p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Data de admissão</label>
+                        <p class="fw-semibold">{{ perfil.data_admissao|default:'Não informado' }}</p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Jornada diária</label>
+                        <p class="fw-semibold">{{ perfil.jornada_diaria_horas }}h</p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Valor por hora</label>
+                        <p class="fw-semibold">
+                            {% if perfil.valor_hora %}
+                                R$ {{ perfil.valor_hora }}
+                            {% else %}
+                                Não informado
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Situação</label>
+                        <p>
+                            {% if perfil.primeiro_acesso %}
+                                <span class="badge bg-warning text-dark">Aguardando 1º acesso</span>
+                            {% else %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

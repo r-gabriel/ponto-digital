@@ -146,3 +146,14 @@ class EditarPerfilForm(forms.ModelForm):
             ),
             'jornada_diaria_horas': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+class FotoPerfilForm(forms.ModelForm):
+    """
+    Formulário usado pelo colaborador para inserir ou alterar a foto de perfil.
+    """
+    class Meta:
+        model = Perfil
+        fields = ('foto',)
+        widgets = {
+            'foto': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
+        }

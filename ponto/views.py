@@ -8,7 +8,7 @@ from django.utils import timezone
 from datetime import datetime
 
 from .decorators import gestor_required
-from .forms import CadastroColaboradorForm, PerfilColaboradorForm, PrimeiroAcessoForm, EditarPerfilForm, EditarUsuarioForm
+from .forms import CadastroColaboradorForm, PerfilColaboradorForm, PrimeiroAcessoForm, EditarPerfilForm, EditarUsuarioForm, FotoPerfilForm
 from .models import RegistroPonto, JornadaDiaria, Perfil
 
 
@@ -222,4 +222,22 @@ def editar_colaborador(request, user_id):
         'user_form': user_form,
         'perfil_form': perfil_form,
         'colaborador': colaborador,
+    })
+
+@login_required
+def meu_perfil(request):
+    perfil, _ = Perfil.objects.get_or_create(usuario=request.user)
+
+    if request.method == 'POST':
+        form = FotoPerfilForm(request.POST, request.FILES, instance=perfil)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Foto atualizada com sucesso.')
+            return redirect('meu_perfil')
+    else:
+        form = FotoPerfilForm(instance=perfil)
+
+    return render(request, 'ponto/meu_perfil.html', {
+        'perfil': perfil,
+        'form': form,
     })
