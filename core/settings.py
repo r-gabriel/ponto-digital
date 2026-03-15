@@ -139,3 +139,11 @@ handler403 = 'django.views.defaults.permission_denied'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# CSRF e proxy
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.up.railway.app',
+]
+
+# necessário quando está atrás de proxy (Railway, Heroku, etc.)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
