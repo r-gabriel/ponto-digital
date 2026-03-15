@@ -1,60 +1,220 @@
 {% extends 'base.html' %}
 
 {% block titulo %}Novo Colaborador{% endblock %}
-{% block page_title %}Cadastrar Colaborador{% endblock %}
-
-{% block topbar_actions %}
-    <a href="{% url 'lista_colaboradores' %}" class="btn btn-pd-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i> Voltar
-    </a>
-{% endblock %}
+{% block page_title %}Cadastrar colaborador{% endblock %}
 
 {% block conteudo %}
-<form method="post">
+<form method="post" novalidate>
     {% csrf_token %}
+
+    <!-- Cabeçalho -->
+    <div class="pd-card mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width:44px;height:44px;background:#ede9fe;border-radius:14px;
+                        display:flex;align-items:center;justify-content:center;color:#4c1d95;">
+                <i class="bi bi-person-plus" style="font-size:1.3rem;"></i>
+            </div>
+            <div>
+                <h5 class="mb-0" style="font-weight:700;">Novo colaborador</h5>
+                <div style="font-size:.82rem;color:#6b7280;">
+                    Preencha os dados de acesso e as informações contratuais.
+                </div>
+            </div>
+            <a href="{% url 'lista_colaboradores' %}"
+               class="btn btn-pd-secondary ms-auto">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Erros globais -->
+    {% if user_form.non_field_errors or perfil_form.non_field_errors %}
+        <div class="pd-alert pd-alert-danger mb-3">
+            <i class="bi bi-exclamation-circle"></i>
+            {{ user_form.non_field_errors }}
+            {{ perfil_form.non_field_errors }}
+        </div>
+    {% endif %}
+
     <div class="row g-4">
-        <div class="col-md-6">
-            <div class="pd-card">
-                <div class="pd-card-title"><i class="bi bi-person me-1"></i> Dados de acesso</div>
-                {% for field in user_form %}
-                    <div class="mb-3">
-                        <label class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <div style="font-size:.78rem;color:#dc2626;margin-top:4px;">
-                                {{ field.errors|join:', ' }}
-                            </div>
-                        {% endif %}
+
+        <!-- Dados de acesso -->
+        <div class="col-lg-6">
+            <div class="pd-card h-100">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <i class="bi bi-person-lines-fill" style="color:#6b7280;"></i>
+                    <span class="pd-card-title mb-0">Dados de acesso</span>
+                </div>
+
+                <!-- first_name -->
+                <div class="mb-3">
+                    <label class="form-label">Nome</label>
+                    <input type="text"
+                           name="first_name"
+                           class="form-control {% if user_form.first_name.errors %}is-invalid{% endif %}"
+                           value="{{ user_form.first_name.value|default:'' }}">
+                    {% if user_form.first_name.errors %}
+                        <div class="invalid-feedback">{{ user_form.first_name.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- last_name -->
+                <div class="mb-3">
+                    <label class="form-label">Sobrenome</label>
+                    <input type="text"
+                           name="last_name"
+                           class="form-control {% if user_form.last_name.errors %}is-invalid{% endif %}"
+                           value="{{ user_form.last_name.value|default:'' }}">
+                    {% if user_form.last_name.errors %}
+                        <div class="invalid-feedback">{{ user_form.last_name.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- email -->
+                <div class="mb-3">
+                    <label class="form-label">E-mail</label>
+                    <input type="email"
+                           name="email"
+                           class="form-control {% if user_form.email.errors %}is-invalid{% endif %}"
+                           value="{{ user_form.email.value|default:'' }}">
+                    {% if user_form.email.errors %}
+                        <div class="invalid-feedback">{{ user_form.email.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- username -->
+                <div class="mb-3">
+                    <label class="form-label">Usuário (login)</label>
+                    <input type="text"
+                           name="username"
+                           class="form-control {% if user_form.username.errors %}is-invalid{% endif %}"
+                           value="{{ user_form.username.value|default:'' }}">
+                    {% if user_form.username.errors %}
+                        <div class="invalid-feedback">{{ user_form.username.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- senha_inicial -->
+                <div class="mb-3">
+                    <label class="form-label">Senha inicial</label>
+                    <input type="password"
+                           name="senha_inicial"
+                           class="form-control {% if user_form.senha_inicial.errors %}is-invalid{% endif %}">
+                    <div style="font-size:.75rem;color:#6b7280;margin-top:4px;">
+                        Deixe em branco para o colaborador definir no primeiro acesso.
                     </div>
-                {% endfor %}
+                    {% if user_form.senha_inicial.errors %}
+                        <div class="invalid-feedback">{{ user_form.senha_inicial.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- confirmar_senha -->
+                <div class="mb-0">
+                    <label class="form-label">Confirmar senha</label>
+                    <input type="password"
+                           name="confirmar_senha"
+                           class="form-control {% if user_form.confirmar_senha.errors %}is-invalid{% endif %}">
+                    {% if user_form.confirmar_senha.errors %}
+                        <div class="invalid-feedback">{{ user_form.confirmar_senha.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="pd-card">
-                <div class="pd-card-title"><i class="bi bi-briefcase me-1"></i> Dados contratuais</div>
-                {% for field in perfil_form %}
-                    <div class="mb-3">
-                        <label class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <div style="font-size:.78rem;color:#dc2626;margin-top:4px;">
-                                {{ field.errors|join:', ' }}
-                            </div>
-                        {% endif %}
-                        {% if field.help_text %}
-                            <div style="font-size:.75rem;color:#6b7280;margin-top:4px;">
-                                {{ field.help_text }}
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+
+        <!-- Dados contratuais -->
+        <div class="col-lg-6">
+            <div class="pd-card h-100">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <i class="bi bi-briefcase" style="color:#6b7280;"></i>
+                    <span class="pd-card-title mb-0">Dados contratuais</span>
+                </div>
+
+                <!-- cargo -->
+                <div class="mb-3">
+                    <label class="form-label">Cargo</label>
+                    <input type="text"
+                           name="cargo"
+                           class="form-control {% if perfil_form.cargo.errors %}is-invalid{% endif %}"
+                           value="{{ perfil_form.cargo.value|default:'' }}">
+                    {% if perfil_form.cargo.errors %}
+                        <div class="invalid-feedback">{{ perfil_form.cargo.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- data_admissao -->
+                <div class="mb-3">
+                    <label class="form-label">Data de admissão</label>
+                    <input type="date"
+                           name="data_admissao"
+                           class="form-control {% if perfil_form.data_admissao.errors %}is-invalid{% endif %}"
+                           value="{{ perfil_form.data_admissao.value|default:'' }}">
+                    {% if perfil_form.data_admissao.errors %}
+                        <div class="invalid-feedback">{{ perfil_form.data_admissao.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- turno -->
+                <div class="mb-3">
+                    <label class="form-label">Turno</label>
+                    <select name="turno"
+                            class="form-select {% if perfil_form.turno.errors %}is-invalid{% endif %}">
+                        <option value="">Selecione...</option>
+                        {% for val, label in perfil_form.fields.turno.choices %}
+                            {% if val %}
+                                <option value="{{ val }}"
+                                    {% if perfil_form.turno.value == val %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if perfil_form.turno.errors %}
+                        <div class="invalid-feedback">{{ perfil_form.turno.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- jornada_diaria_horas -->
+                <div class="mb-3">
+                    <label class="form-label">Jornada diária (horas)</label>
+                    <input type="number"
+                           name="jornada_diaria_horas"
+                           class="form-control {% if perfil_form.jornada_diaria_horas.errors %}is-invalid{% endif %}"
+                           value="{{ perfil_form.jornada_diaria_horas.value|default:'8' }}"
+                           min="1" max="24">
+                    {% if perfil_form.jornada_diaria_horas.errors %}
+                        <div class="invalid-feedback">{{ perfil_form.jornada_diaria_horas.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- valor_hora -->
+                <div class="mb-0">
+                    <label class="form-label">Valor por hora (R$)</label>
+                    <input type="number"
+                           name="valor_hora"
+                           step="0.01"
+                           class="form-control {% if perfil_form.valor_hora.errors %}is-invalid{% endif %}"
+                           value="{{ perfil_form.valor_hora.value|default:'' }}">
+                    {% if perfil_form.valor_hora.errors %}
+                        <div class="invalid-feedback">{{ perfil_form.valor_hora.errors|join:', ' }}</div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-    <div class="d-grid mt-4">
-        <button type="submit" class="btn btn-pd-primary btn-lg py-3">
-            <i class="bi bi-check-circle me-2"></i> Cadastrar colaborador
-        </button>
+
+    <!-- Barra inferior fixa -->
+    <div class="position-sticky mt-4" style="bottom:0;z-index:10;">
+        <div class="pd-card d-flex flex-column flex-md-row align-items-center
+                    justify-content-between py-2 gap-2"
+             style="border-radius:20px 20px 0 0;">
+            <div style="font-size:.82rem;color:#6b7280;">
+                <i class="bi bi-info-circle me-1"></i>
+                Revise os dados antes de concluir o cadastro.
+            </div>
+            <button type="submit" class="btn btn-pd-primary">
+                <i class="bi bi-check-circle me-1"></i> Cadastrar colaborador
+            </button>
+        </div>
     </div>
 </form>
 {% endblock %}

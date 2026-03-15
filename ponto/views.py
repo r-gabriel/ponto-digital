@@ -1,122 +1,167 @@
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from datetime import datetime
 
-from .decorators import gestor_required
-from .forms import CadastroColaboradorForm, PerfilColaboradorForm, PrimeiroAcessoForm, EditarPerfilForm, EditarUsuarioForm, FotoPerfilForm
 from .models import RegistroPonto, JornadaDiaria, Perfil
+from .forms import (
+    CadastroColaboradorForm,
+    PerfilColaboradorForm,
+    EditarUsuarioForm,
+    EditarPerfilForm,
+    PrimeiroAcessoForm,
+    FotoPerfilForm,
+)
 
 
+# ── helper ──────────────────────────────────────────────────────────────
+def is_gestor(user):
+    """Retorna True se o usuário é superuser OU pertence a qualquer grupo."""
+    return user.is_superuser or user.groups.exists()
+
+
+def gestor_required(view_func):
+    """Decorator simples: redireciona para bater_ponto se não for gestor."""
+    @login_required
+    def wrapper(request, *args, **kwargs):
+        if not is_gestor(request.user):
+            messages.error(request, 'Acesso restrito a gestores.')
+            return redirect('bater_ponto')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+# ── Bater ponto ─────────────────────────────────────────────────────────
 @login_required
 def bater_ponto(request):
-    # Redireciona para o primeiro acesso se necessário
-    if hasattr(request.user, 'perfil') and request.user.perfil.primeiro_acesso:
-        return redirect('primeiro_acesso')
+    # Redireciona para primeiro acesso se necessário
+    try:
+        if request.user.perfil.primeiro_acesso:
+            return redirect('primeiro_acesso')
+    except Perfil.DoesNotExist:
+        pass
 
     if request.method == 'POST':
         tipo = request.POST.get('tipo')
-        if tipo in ['E', 'S']:
-            try:
-                registro = RegistroPonto(
-                    funcionario=request.user,
-                    tipo=tipo,
-                )
-                registro.full_clean()
-                registro.save()
+        if tipo in ('E', 'S'):
+            RegistroPonto.objects.create(
+                funcionario=request.user,
+                tipo=tipo,
+                data_hora=timezone.now(),
+            )
 
-                hoje = timezone.localdate()
-                jornada, _ = JornadaDiaria.objects.get_or_create(
-                    funcionario=request.user,
-                    data=hoje
-                )
-                jornada.calcular()
+            # Recalcula jornada do dia
+            hoje = timezone.localdate()
+            jornada, _ = JornadaDiaria.objects.get_or_create(
+                funcionario=request.user,
+                data=hoje,
+            )
+            jornada.calcular()
 
-                messages.success(request, 'Ponto registrado com sucesso.')
-                return redirect('historico_ponto')
-
-            except ValidationError as e:
-                for erro in e.messages:
-                    messages.error(request, erro)
-        else:
-            messages.error(request, 'Tipo de registro inválido.')
+            tipo_label = 'Entrada' if tipo == 'E' else 'Saída'
+            messages.success(request, f'{tipo_label} registrada com sucesso.')
+            return redirect('bater_ponto')
 
     return render(request, 'ponto/bater_ponto.html')
 
 
+# ── Histórico ────────────────────────────────────────────────────────────
 @login_required
 def historico_ponto(request):
-    registros = RegistroPonto.objects.filter(
-        funcionario=request.user
-    ).order_by('-data_hora')[:50]
-
-    jornadas = JornadaDiaria.objects.filter(
-        funcionario=request.user
-    ).order_by('-data')[:30]
-
+    registros = (
+        RegistroPonto.objects
+        .filter(funcionario=request.user)
+        .order_by('-data_hora')
+    )
+    jornadas = (
+        JornadaDiaria.objects
+        .filter(funcionario=request.user)
+        .order_by('-data')
+    )
     return render(request, 'ponto/historico_ponto.html', {
         'registros': registros,
         'jornadas': jornadas,
     })
 
 
+# ── Relatório ────────────────────────────────────────────────────────────
 @gestor_required
 def relatorio_jornadas(request):
-    funcionario_id = request.GET.get('funcionario')
-    data_inicial = request.GET.get('data_inicial')
-    data_final = request.GET.get('data_final')
+    from datetime import timedelta
 
-    funcionarios = User.objects.all().order_by('username')
-    jornadas = JornadaDiaria.objects.none()
-    totais = {}
+    funcionarios = User.objects.filter(is_active=True).order_by('first_name', 'username')
+    jornadas = []
+    totais = {'trabalhado': '00:00', 'intervalo': '00:00', 'extras': '00:00'}
+    funcionario_id = request.GET.get('funcionario', '')
+    data_inicial = request.GET.get('data_inicial', '')
+    data_final = request.GET.get('data_final', '')
 
     if funcionario_id and data_inicial and data_final:
         try:
-            data_ini = datetime.strptime(data_inicial, '%Y-%m-%d').date()
-            data_fim = datetime.strptime(data_final, '%Y-%m-%d').date()
-
-            jornadas = JornadaDiaria.objects.filter(
-                funcionario_id=funcionario_id,
-                data__range=(data_ini, data_fim)
-            ).order_by('data')
-
-            def fmt(dur):
-                if not dur:
-                    return '--:--'
-                total_segundos = int(dur.total_seconds())
-                horas, resto = divmod(total_segundos, 3600)
-                minutos = resto // 60
-                return f'{horas:02d}:{minutos:02d}'
-
-            agregados = jornadas.aggregate(
-                trabalhado=Sum('total_trabalhado'),
-                intervalo=Sum('total_intervalo'),
-                extras=Sum('horas_extras'),
+            funcionario = User.objects.get(pk=funcionario_id)
+            jornadas = (
+                JornadaDiaria.objects
+                .filter(
+                    funcionario=funcionario,
+                    data__gte=data_inicial,
+                    data__lte=data_final,
+                )
+                .order_by('data')
             )
 
-            totais = {
-                'trabalhado': fmt(agregados['trabalhado']),
-                'intervalo': fmt(agregados['intervalo']),
-                'extras': fmt(agregados['extras']),
-            }
+            # Calcula totais
+            total_trabalhado = timedelta()
+            total_intervalo = timedelta()
+            total_extras = timedelta()
 
-        except ValueError:
-            messages.error(request, 'Datas em formato inválido.')
+            for j in jornadas:
+                if j.total_trabalhado:
+                    total_trabalhado += j.total_trabalhado
+                if j.total_intervalo:
+                    total_intervalo += j.total_intervalo
+                if j.horas_extras and j.horas_extras.total_seconds() > 0:
+                    total_extras += j.horas_extras
+
+            def fmt(td):
+                total_s = int(td.total_seconds())
+                h, m = divmod(total_s // 60, 60)
+                return f'{h:02d}:{m:02d}'
+
+            totais = {
+                'trabalhado': fmt(total_trabalhado),
+                'intervalo': fmt(total_intervalo),
+                'extras': fmt(total_extras),
+            }
+        except User.DoesNotExist:
+            pass
 
     return render(request, 'ponto/relatorio_jornadas.html', {
         'funcionarios': funcionarios,
         'jornadas': jornadas,
         'totais': totais,
-        'funcionario_id': funcionario_id or '',
-        'data_inicial': data_inicial or '',
-        'data_final': data_final or '',
+        'funcionario_id': funcionario_id,
+        'data_inicial': data_inicial,
+        'data_final': data_final,
     })
 
 
+# ── Lista de colaboradores ───────────────────────────────────────────────
+@gestor_required
+def lista_colaboradores(request):
+    colaboradores = (
+        User.objects
+        .filter(is_active=True)
+        .select_related('perfil')
+        .order_by('first_name', 'username')
+    )
+    return render(request, 'ponto/lista_colaboradores.html', {
+        'colaboradores': colaboradores,
+    })
+
+
+# ── Cadastrar colaborador ────────────────────────────────────────────────
 @gestor_required
 def cadastrar_colaborador(request):
     if request.method == 'POST':
@@ -124,24 +169,34 @@ def cadastrar_colaborador(request):
         perfil_form = PerfilColaboradorForm(request.POST)
 
         if user_form.is_valid() and perfil_form.is_valid():
-            usuario = user_form.save()
+            # Cria o usuário
+            user = user_form.save(commit=False)
+            user.is_active = True
 
-            # O perfil já foi criado pelo signal, só atualiza os dados
-            perfil = usuario.perfil
-            perfil.cargo = perfil_form.cleaned_data['cargo']
-            perfil.data_admissao = perfil_form.cleaned_data['data_admissao']
-            perfil.turno = perfil_form.cleaned_data['turno']
-            perfil.valor_hora = perfil_form.cleaned_data['valor_hora']
-            perfil.jornada_diaria_horas = perfil_form.cleaned_data['jornada_diaria_horas']
-            perfil.primeiro_acesso = True
+            senha = user_form.cleaned_data.get('senha_inicial')
+            if senha:
+                user.set_password(senha)
+                primeiro_acesso = False
+            else:
+                user.set_unusable_password()
+                primeiro_acesso = True
+
+            user.save()
+
+            # Cria o perfil vinculado
+            perfil = perfil_form.save(commit=False)
+            perfil.usuario = user
+            perfil.primeiro_acesso = primeiro_acesso
             perfil.save()
 
             messages.success(
                 request,
-                f'Colaborador {usuario.get_full_name() or usuario.username} '
+                f'Colaborador "{user.get_full_name() or user.username}" '
                 f'cadastrado com sucesso.'
             )
             return redirect('lista_colaboradores')
+        else:
+            messages.error(request, 'Corrija os erros abaixo.')
     else:
         user_form = CadastroColaboradorForm()
         perfil_form = PerfilColaboradorForm()
@@ -152,53 +207,10 @@ def cadastrar_colaborador(request):
     })
 
 
-@gestor_required
-def lista_colaboradores(request):
-    colaboradores = User.objects.select_related('perfil').order_by('first_name', 'last_name')
-    return render(request, 'ponto/lista_colaboradores.html', {
-        'colaboradores': colaboradores,
-    })
-
-
-@login_required
-def primeiro_acesso(request):
-    # Se não é primeiro acesso, manda para o ponto
-    if not request.user.perfil.primeiro_acesso:
-        return redirect('bater_ponto')
-
-    if request.method == 'POST':
-        form = PrimeiroAcessoForm(request.POST)
-        if form.is_valid():
-            user = request.user
-            user.first_name = form.cleaned_data['first_name']
-            user.last_name = form.cleaned_data['last_name']
-            user.email = form.cleaned_data['email']
-            user.set_password(form.cleaned_data['nova_senha'])
-            user.save()
-
-            # Marca que o primeiro acesso foi concluído
-            user.perfil.primeiro_acesso = False
-            user.perfil.save()
-
-            messages.success(
-                request,
-                'Perfil atualizado com sucesso. Faça login com sua nova senha.'
-            )
-            return redirect('login')
-    else:
-        form = PrimeiroAcessoForm(initial={
-            'first_name': request.user.first_name,
-            'last_name': request.user.last_name,
-            'email': request.user.email,
-        })
-
-    return render(request, 'ponto/primeiro_acesso.html', {'form': form})
-
+# ── Editar colaborador ───────────────────────────────────────────────────
 @gestor_required
 def editar_colaborador(request, user_id):
     colaborador = get_object_or_404(User, pk=user_id)
-
-    # Garante que o perfil existe
     perfil, _ = Perfil.objects.get_or_create(usuario=colaborador)
 
     if request.method == 'POST':
@@ -208,22 +220,50 @@ def editar_colaborador(request, user_id):
         if user_form.is_valid() and perfil_form.is_valid():
             user_form.save()
             perfil_form.save()
-            messages.success(
-                request,
-                f'Dados de {colaborador.get_full_name() or colaborador.username} '
-                f'atualizados com sucesso.'
-            )
+            messages.success(request, 'Colaborador atualizado com sucesso.')
             return redirect('lista_colaboradores')
+        else:
+            messages.error(request, 'Corrija os erros abaixo.')
     else:
         user_form = EditarUsuarioForm(instance=colaborador)
         perfil_form = EditarPerfilForm(instance=perfil)
 
     return render(request, 'ponto/editar_colaborador.html', {
+        'colaborador': colaborador,
         'user_form': user_form,
         'perfil_form': perfil_form,
-        'colaborador': colaborador,
     })
 
+
+# ── Primeiro acesso ──────────────────────────────────────────────────────
+@login_required
+def primeiro_acesso(request):
+    try:
+        if not request.user.perfil.primeiro_acesso:
+            return redirect('bater_ponto')
+    except Perfil.DoesNotExist:
+        return redirect('bater_ponto')
+
+    if request.method == 'POST':
+        form = PrimeiroAcessoForm(request.POST)
+        if form.is_valid():
+            request.user.set_password(form.cleaned_data['senha'])
+            request.user.save()
+            request.user.perfil.primeiro_acesso = False
+            request.user.perfil.save()
+            update_session_auth_hash(request, request.user)
+            messages.success(request, 'Senha definida com sucesso! Bem-vindo.')
+            return redirect('bater_ponto')
+    else:
+        form = PrimeiroAcessoForm()
+
+    return render(request, 'ponto/primeiro_acesso.html', {
+        'form': form,
+        'hide_chrome': True,
+    })
+
+
+# ── Meu perfil ───────────────────────────────────────────────────────────
 @login_required
 def meu_perfil(request):
     perfil, _ = Perfil.objects.get_or_create(usuario=request.user)
