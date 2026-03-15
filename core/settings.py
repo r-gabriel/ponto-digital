@@ -138,7 +138,7 @@ LOGOUT_REDIRECT_URL = 'login'
 handler403 = 'django.views.defaults.permission_denied'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # CSRF e proxy
 CSRF_TRUSTED_ORIGINS = [
