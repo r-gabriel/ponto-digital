@@ -4,6 +4,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.db import transaction
 
 from .models import RegistroPonto, JornadaDiaria, Perfil
 from .forms import (
@@ -169,34 +170,46 @@ def cadastrar_colaborador(request):
         perfil_form = PerfilColaboradorForm(request.POST)
 
         if user_form.is_valid() and perfil_form.is_valid():
-            # Cria o usuário
-            user = user_form.save(commit=False)
-            user.is_active = True
+            try:
+                with transaction.atomic():
+                    # cria o usuário
+                    user = user_form.save(commit=False)
+                    user.is_active = True
 
-            senha = user_form.cleaned_data.get('senha_inicial')
-            if senha:
-                user.set_password(senha)
-                primeiro_acesso = False
-            else:
-                user.set_unusable_password()
-                primeiro_acesso = True
+                    senha = user_form.cleaned_data.get('senha_inicial')
+                    if senha:
+                        user.set_password(senha)
+                        primeiro_acesso = False
+                    else:
+                        user.set_unusable_password()
+                        primeiro_acesso = True
 
-            user.save()
+                    user.save()
+                    # neste ponto o signal já pode ter criado o Perfil
 
-            # Cria o perfil vinculado
-            perfil = perfil_form.save(commit=False)
-            perfil.usuario = user
-            perfil.primeiro_acesso = primeiro_acesso
-            perfil.save()
+                    # pega o perfil existente (criado pelo signal) ou cria se não existir
+                    perfil, _ = Perfil.objects.get_or_create(usuario=user)
 
-            messages.success(
-                request,
-                f'Colaborador "{user.get_full_name() or user.username}" '
-                f'cadastrado com sucesso.'
-            )
-            return redirect('lista_colaboradores')
+                    # aplica os dados do formulário no perfil
+                    perfil.cargo = perfil_form.cleaned_data.get('cargo', '')
+                    perfil.data_admissao = perfil_form.cleaned_data.get('data_admissao')
+                    perfil.turno = perfil_form.cleaned_data.get('turno', '')
+                    perfil.valor_hora = perfil_form.cleaned_data.get('valor_hora')
+                    perfil.jornada_diaria_horas = perfil_form.cleaned_data.get('jornada_diaria_horas', 8)
+                    perfil.primeiro_acesso = primeiro_acesso
+                    perfil.save()
+
+                messages.success(
+                    request,
+                    f'Colaborador "{user.get_full_name() or user.username}" '
+                    f'cadastrado com sucesso.'
+                )
+                return redirect('lista_colaboradores')
+
+            except Exception as e:
+                messages.error(request, f'Erro ao cadastrar: {str(e)}')
         else:
-            messages.error(request, 'Corrija os erros abaixo.')
+            messages.error(request, 'Corrija os erros destacados abaixo.')
     else:
         user_form = CadastroColaboradorForm()
         perfil_form = PerfilColaboradorForm()

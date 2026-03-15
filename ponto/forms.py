@@ -32,6 +32,14 @@ class CadastroColaboradorForm(forms.ModelForm):
             'username': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError(
+                f'O usuário "{username}" já existe. Escolha outro nome de usuário.'
+            )
+        return username
+
     def clean(self):
         cleaned = super().clean()
         senha = cleaned.get('senha_inicial')
