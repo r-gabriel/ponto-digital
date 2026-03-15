@@ -1,12 +1,13 @@
 asgiref==3.8.1
 backports.zoneinfo==0.2.1
 dj-database-url==3.0.1
-django==4.2.29
+Django==4.2.29
 gunicorn==23.0.0
 packaging==26.0
 pillow==10.4.0
+pkg_resources==0.0.0
 psycopg2-binary==2.9.10
 python-decouple==3.8
 sqlparse==0.5.5
-typing-extensions==4.13.2
+typing_extensions==4.13.2
 whitenoise==6.7.0
