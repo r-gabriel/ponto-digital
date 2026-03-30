@@ -80,6 +80,9 @@ def bater_ponto(request):
             messages.success(request, f'{tipo_label} registrada com sucesso.')
             return redirect('bater_ponto')
 
+    # GET — sempre retorna o template
+    return render(request, 'ponto/bater_ponto.html')
+
 
 # ── Histórico ────────────────────────────────────────────────────────────
 @login_required
