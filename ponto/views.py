@@ -47,6 +47,21 @@ def bater_ponto(request):
     if request.method == 'POST':
         tipo = request.POST.get('tipo')
         if tipo in ('E', 'S'):
+
+            # Pega o último registro do usuário
+            ultimo = RegistroPonto.objects.filter(
+                funcionario=request.user
+            ).order_by('-data_hora').first()
+
+            # Valida a ordem E-S-E-S
+            if tipo == 'E' and ultimo and ultimo.tipo == 'E':
+                messages.error(request, 'Você já registrou uma entrada. Registre a saída antes.')
+                return redirect('bater_ponto')
+
+            if tipo == 'S' and (not ultimo or ultimo.tipo == 'S'):
+                messages.error(request, 'Você precisa registrar uma entrada antes de registrar a saída.')
+                return redirect('bater_ponto')
+
             RegistroPonto.objects.create(
                 funcionario=request.user,
                 tipo=tipo,
@@ -64,8 +79,6 @@ def bater_ponto(request):
             tipo_label = 'Entrada' if tipo == 'E' else 'Saída'
             messages.success(request, f'{tipo_label} registrada com sucesso.')
             return redirect('bater_ponto')
-
-    return render(request, 'ponto/bater_ponto.html')
 
 
 # ── Histórico ────────────────────────────────────────────────────────────
