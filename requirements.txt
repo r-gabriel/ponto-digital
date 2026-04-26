@@ -5,7 +5,6 @@ Django==4.2.29
 gunicorn==23.0.0
 packaging==26.0
 pillow==10.4.0
-pkg_resources==0.0.0
 psycopg2-binary==2.9.10
 python-decouple==3.8
 sqlparse==0.5.5
