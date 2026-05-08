@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Entrar — Ponto Digital{% endblock %}
+
+{% block conteudo %}
+<div style="
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1e0a3c 0%, #4c1d95 50%, #6c2bd9 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+">
+
+    <div style="width: 100%; max-width: 400px;">
+
+        <!-- Card principal -->
+        <div style="
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 36px 32px 28px;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.35);
+        ">
+
+            <!-- Topo: ícone + nome -->
+            <div style="text-align:center;margin-bottom:28px;">
+                <div style="
+                    width: 56px;
+                    height: 56px;
+                    background: #ede9fe;
+                    border-radius: 18px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 14px;
+                ">
+                    <i class="bi bi-clock-history" style="font-size:1.6rem;color:#4c1d95;"></i>
+                </div>
+                <div style="font-size:1.15rem;font-weight:700;color:#111827;letter-spacing:.02em;">
+                    Ponto Digital
+                </div>
+                <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">
+                    Faça login para registrar seu ponto
+                </div>
+            </div>
+
+            <!-- Erro de login -->
+            {% if form.errors %}
+                <div style="
+                    background: #fee2e2;
+                    color: #b91c1c;
+                    border-radius: 12px;
+                    padding: 10px 14px;
+                    font-size: .84rem;
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 18px;
+                ">
+                    <i class="bi bi-exclamation-circle"></i>
+                    Usuário ou senha incorretos. Tente novamente.
+                </div>
+            {% endif %}
+
+            <!-- Formulário -->
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Campo usuário -->
+                <div style="margin-bottom:16px;">
+                    <label style="
+                        display:block;
+                        font-size:.72rem;
+                        font-weight:600;
+                        color:#6b7280;
+                        text-transform:uppercase;
+                        letter-spacing:.1em;
+                        margin-bottom:6px;
+                    ">Usuário</label>
+                    <div style="position:relative;">
+                        <i class="bi bi-person" style="
+                            position:absolute;
+                            left:13px;
+                            top:50%;
+                            transform:translateY(-50%);
+                            color:#9ca3af;
+                            font-size:1rem;
+                        "></i>
+                        <input
+                            type="text"
+                            name="username"
+                            autofocus
+                            required
+                            placeholder="seu.usuario"
+                            style="
+                                width:100%;
+                                border:1.5px solid #e5e7eb;
+                                border-radius:12px;
+                                padding:10px 12px 10px 38px;
+                                font-size:.9rem;
+                                font-family:inherit;
+                                outline:none;
+                                transition:border-color .18s, box-shadow .18s;
+                                color:#111827;
+                            "
+                            onfocus="this.style.borderColor='#6c2bd9';this.style.boxShadow='0 0 0 3px rgba(108,43,217,0.15)'"
+                            onblur="this.style.borderColor='#e5e7eb';this.style.boxShadow='none'"
+                        >
+                    </div>
+                </div>
+
+                <!-- Campo senha -->
+                <div style="margin-bottom:26px;">
+                    <label style="
+                        display:block;
+                        font-size:.72rem;
+                        font-weight:600;
+                        color:#6b7280;
+                        text-transform:uppercase;
+                        letter-spacing:.1em;
+                        margin-bottom:6px;
+                    ">Senha</label>
+                    <div style="position:relative;">
+                        <i class="bi bi-lock" style="
+                            position:absolute;
+                            left:13px;
+                            top:50%;
+                            transform:translateY(-50%);
+                            color:#9ca3af;
+                            font-size:1rem;
+                        "></i>
+                        <input
+                            type="password"
+                            name="password"
+                            required
+                            placeholder="••••••••"
+                            style="
+                                width:100%;
+                                border:1.5px solid #e5e7eb;
+                                border-radius:12px;
+                                padding:10px 12px 10px 38px;
+                                font-size:.9rem;
+                                font-family:inherit;
+                                outline:none;
+                                transition:border-color .18s, box-shadow .18s;
+                                color:#111827;
+                            "
+                            onfocus="this.style.borderColor='#6c2bd9';this.style.boxShadow='0 0 0 3px rgba(108,43,217,0.15)'"
+                            onblur="this.style.borderColor='#e5e7eb';this.style.boxShadow='none'"
+                        >
+                    </div>
+                </div>
+
+                <!-- Botão entrar -->
+                <button type="submit" style="
+                    width: 100%;
+                    background: #f97316;
+                    color: #fff;
+                    border: none;
+                    border-radius: 999px;
+                    padding: 13px;
+                    font-size: .95rem;
+                    font-weight: 700;
+                    font-family: inherit;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    transition: background .18s, transform .1s;
+                "
+                    onmouseover="this.style.background='#ea580c';this.style.transform='translateY(-1px)'"
+                    onmouseout="this.style.background='#f97316';this.style.transform='translateY(0)'"
+                >
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Entrar no sistema
+                </button>
+            </form>
+
+        </div>
+
+        <!-- Rodapé abaixo do card -->
+        <div style="text-align:center;margin-top:18px;font-size:.78rem;color:rgba(255,255,255,0.45);">
+            Ponto Digital &copy; {{ now.year|default:"2026" }}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

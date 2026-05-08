@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Colaboradores{% endblock %}
+{% block page_title %}Colaboradores{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{% url 'cadastrar_colaborador' %}" class="btn btn-pd-primary btn-sm">
+        <i class="bi bi-person-plus me-1"></i> Novo colaborador
+    </a>
+{% endblock %}
+
+{% block conteudo %}
+<div class="pd-card p-0" style="overflow:hidden;">
+    <div class="table-responsive">
+        <table class="pd-table">
+            <thead>
+                <tr>
+                    <th>Colaborador</th>
+                    <th>Cargo</th>
+                    <th>Turno</th>
+                    <th>Admissão</th>
+                    <th>Jornada</th>
+                    <th>Valor/hora</th>
+                    <th>Situação</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for colaborador in colaboradores %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if colaborador.perfil.foto %}
+                                    <img src="{{ colaborador.perfil.foto.url }}"
+                                         style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+                                {% else %}
+                                    <div style="width:32px;height:32px;border-radius:50%;
+                                                background:#ede9fe;display:flex;align-items:center;
+                                                justify-content:center;color:#6c2bd9;font-size:.85rem;">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight:600;font-size:.875rem;">
+                                        {{ colaborador.get_full_name|default:colaborador.username }}
+                                    </div>
+                                    <div style="font-size:.75rem;color:#6b7280;">
+                                        @{{ colaborador.username }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ colaborador.perfil.cargo|default:'—' }}</td>
+                        <td>{{ colaborador.perfil.get_turno_display|default:'—' }}</td>
+                        <td>{{ colaborador.perfil.data_admissao|default:'—' }}</td>
+                        <td>{{ colaborador.perfil.jornada_diaria_horas }}h</td>
+                        <td>
+                            {% if colaborador.perfil.valor_hora %}
+                                R$ {{ colaborador.perfil.valor_hora }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            {% if colaborador.perfil.primeiro_acesso %}
+                                <span class="pd-badge pd-badge-warning">
+                                    <i class="bi bi-hourglass"></i> Aguardando
+                                </span>
+                            {% else %}
+                                <span class="pd-badge pd-badge-success">
+                                    <i class="bi bi-check-circle"></i> Ativo
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'editar_colaborador' colaborador.id %}"
+                               class="btn btn-pd-secondary btn-sm">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5" style="color:#6b7280;">
+                            <i class="bi bi-people" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+                            Nenhum colaborador cadastrado.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

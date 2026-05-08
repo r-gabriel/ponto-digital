@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Histórico de Ponto{% endblock %}
+{% block page_title %}Histórico de ponto{% endblock %}
+
+{% block conteudo %}
+
+<!-- Cards de resumo no topo -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg-3">
+        <div class="pd-card text-center py-3">
+            <div style="font-size:.75rem;font-weight:600;color:#9ca3af;letter-spacing:.18em;">
+                JORNADAS
+            </div>
+            <div style="font-size:1.6rem;font-weight:700;color:#4c1d95;margin-top:4px;">
+                {{ jornadas|length }}
+            </div>
+            <div style="font-size:.78rem;color:#6b7280;margin-top:2px;">
+                últimos 30 dias
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-3">
+        <div class="pd-card text-center py-3">
+            <div style="font-size:.75rem;font-weight:600;color:#9ca3af;letter-spacing:.18em;">
+                REGISTROS
+            </div>
+            <div style="font-size:1.6rem;font-weight:700;color:#16a34a;margin-top:4px;">
+                {{ registros|length }}
+            </div>
+            <div style="font-size:.78rem;color:#6b7280;margin-top:2px;">
+                últimos lançamentos
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumo de jornadas -->
+<div class="pd-card mb-4 p-0" style="overflow:hidden;">
+    <div class="d-flex justify-content-between align-items-center px-4 py-3" style="border-bottom:1px solid #f3f4f6;">
+        <div>
+            <div style="font-size:.8rem;font-weight:600;color:#6b7280;letter-spacing:.16em;text-transform:uppercase;">
+                Resumo de jornadas
+            </div>
+            <div style="font-size:.9rem;color:#4b5563;">
+                Cálculo diário do total trabalhado, intervalo e horas extras.
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="pd-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Total trabalhado</th>
+                    <th>Intervalo</th>
+                    <th>Horas extras</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for jornada in jornadas %}
+                    <tr>
+                        <td>
+                            <div style="font-weight:600;">
+                                {{ jornada.data }}
+                            </div>
+                        </td>
+                        <td>{{ jornada.total_trabalhado_fmt }}</td>
+                        <td>{{ jornada.total_intervalo_fmt }}</td>
+                        <td>
+                            {% if jornada.horas_extras and jornada.horas_extras.total_seconds > 0 %}
+                                <span class="pd-badge pd-badge-danger">
+                                    <i class="bi bi-clock-history"></i>
+                                    {{ jornada.horas_extras_fmt }}
+                                </span>
+                            {% else %}
+                                <span class="pd-badge pd-badge-success">
+                                    <i class="bi bi-check-circle"></i>
+                                    Sem extras
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4" style="color:#6b7280;">
+                            Nenhuma jornada registrada ainda.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Registros individuais -->
+<div class="pd-card p-0" style="overflow:hidden;">
+    <div class="d-flex justify-content-between align-items-center px-4 py-3" style="border-bottom:1px solid #f3f4f6;">
+        <div>
+            <div style="font-size:.8rem;font-weight:600;color:#6b7280;letter-spacing:.16em;text-transform:uppercase;">
+                Registros individuais
+            </div>
+            <div style="font-size:.9rem;color:#4b5563;">
+                Entradas e saídas em ordem decrescente de data.
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="pd-table">
+            <thead>
+                <tr>
+                    <th>Data / Hora</th>
+                    <th>Tipo</th>
+                    <th>Observação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in registros %}
+                    <tr>
+                        <td>
+                            <div style="font-weight:600;">
+                                {{ registro.data_hora|date:"d/m/Y H:i" }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if registro.tipo == 'E' %}
+                                <span class="pd-badge pd-badge-success">
+                                    <i class="bi bi-arrow-down-circle"></i> Entrada
+                                </span>
+                            {% else %}
+                                <span class="pd-badge pd-badge-danger">
+                                    <i class="bi bi-arrow-up-circle"></i> Saída
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="color:#6b7280;">
+                            {{ registro.observacao|default:"—" }}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-4" style="color:#6b7280;">
+                            Nenhum registro de ponto encontrado.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

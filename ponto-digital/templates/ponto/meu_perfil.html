@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Meu Perfil{% endblock %}
+{% block page_title %}Meu perfil{% endblock %}
+
+{% block conteudo %}
+<div class="row g-4">
+
+    <!-- Coluna esquerda: foto + identidade -->
+    <div class="col-lg-4">
+        <div class="pd-card text-center">
+
+            {% if perfil.foto %}
+                <img src="{{ perfil.foto.url }}" alt="Foto de perfil"
+                     class="rounded-circle mb-3"
+                     style="width:96px;height:96px;object-fit:cover;border:4px solid #ede9fe;">
+            {% else %}
+                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                     style="width:96px;height:96px;background:#ede9fe;">
+                    <i class="bi bi-person-fill" style="font-size:2.6rem;color:#4c1d95;"></i>
+                </div>
+            {% endif %}
+
+            <h5 class="mb-1" style="font-weight:600;">
+                {{ request.user.get_full_name|default:request.user.username }}
+            </h5>
+            <div style="font-size:.85rem;color:#6b7280;">
+                @{{ request.user.username }}
+            </div>
+
+            <div class="mt-2">
+                {% if perfil.primeiro_acesso %}
+                    <span class="pd-badge pd-badge-warning">
+                        <i class="bi bi-hourglass-split"></i> Aguardando 1º acesso
+                    </span>
+                {% else %}
+                    <span class="pd-badge pd-badge-success">
+                        <i class="bi bi-check-circle"></i> Ativo
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Upload de foto -->
+            <form method="post" enctype="multipart/form-data" class="mt-4 text-start">
+                {% csrf_token %}
+                <label class="form-label">Foto de perfil</label>
+                {{ form.foto }}
+                <button type="submit" class="btn btn-pd-secondary w-100 mt-2">
+                    <i class="bi bi-camera me-1"></i>
+                    {% if perfil.foto %}Alterar foto{% else %}Inserir foto{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Coluna direita: blocos como no mockup (dados de acesso / contratuais) -->
+    <div class="col-lg-8">
+        <!-- Bloco: Dados de acesso -->
+        <div class="pd-card mb-4">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-person-badge me-2" style="color:#6b7280;"></i>
+                <span class="pd-card-title mb-0">Dados de acesso</span>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-label">Nome</div>
+                    <div style="font-size:.95rem;font-weight:600;">
+                        {{ request.user.first_name|default:"Não informado" }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-label">Sobrenome</div>
+                    <div style="font-size:.95rem;font-weight:600;">
+                        {{ request.user.last_name|default:"Não informado" }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-label">E-mail</div>
+                    <div style="font-size:.95rem;font-weight:600;">
+                        {{ request.user.email|default:"Não informado" }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-label">Usuário (login)</div>
+                    <div style="font-size:.95rem;font-weight:600;">
+                        {{ request.user.username }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bloco: Dados contratuais -->
+        <div class="pd-card">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-briefcase me-2" style="color:#6b7280;"></i>
+                <span class="pd-card-title mb-0">Dados contratuais</span>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-label">Cargo</div>
+                    <div style="font-size:.95rem;font-weight:600;">
+                        {{ perfil.cargo|default:"Não informado" }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-label">Turno</div>
+                    <div style="font-size:.95rem;font-weight:600;">
+                        {{ perfil.get_turno_display|default:"Não informado" }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-label">Data de admissão</div>
+                    <div style="font-size:.95rem;font-weight:600;">
+                        {{ perfil.data_admissao|default:"Não informado" }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-label">Jornada diária</div>
+                    <div style="font-size:.95rem;font-weight:600;">
+                        {{ perfil.jornada_diaria_horas }}h
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-label">Valor por hora</div>
+                    <div style="font-size:.95rem;font-weight:600;">
+                        {% if perfil.valor_hora %}
+                            R$ {{ perfil.valor_hora }}
+                        {% else %}
+                            Não informado
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

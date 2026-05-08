@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Relatórios{% endblock %}
+{% block page_title %}Relatório de jornadas{% endblock %}
+
+{% block conteudo %}
+
+<!-- Filtros / header -->
+<div class="pd-card mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <div style="font-size:.8rem;font-weight:600;color:#6b7280;letter-spacing:.16em;text-transform:uppercase;">
+                Filtro de período
+            </div>
+            <div style="font-size:.9rem;color:#4b5563;">
+                Gere o relatório por colaborador e intervalo de datas.
+            </div>
+        </div>
+    </div>
+
+    <form method="get">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Colaborador</label>
+                <select name="funcionario" class="form-select" required>
+                    <option value="">Selecione...</option>
+                    {% for func in funcionarios %}
+                        <option value="{{ func.id }}"
+                            {% if func.id|stringformat:'s' == funcionario_id %}selected{% endif %}>
+                            {{ func.get_full_name|default:func.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label">Data inicial</label>
+                <input type="date" name="data_inicial" class="form-control"
+                       value="{{ data_inicial }}" required>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label">Data final</label>
+                <input type="date" name="data_final" class="form-control"
+                       value="{{ data_final }}" required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-pd-primary w-100">
+                    <i class="bi bi-search me-1"></i> Filtrar
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if jornadas %}
+
+    <!-- Cards de resumo (tipo dashboard) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="pd-card py-3">
+                <div style="font-size:.75rem;font-weight:600;color:#9ca3af;letter-spacing:.18em;">
+                    TOTAL TRABALHADO
+                </div>
+                <div style="font-size:1.6rem;font-weight:700;color:#4c1d95;margin-top:4px;">
+                    {{ totais.trabalhado }}
+                </div>
+                <div style="font-size:.78rem;color:#6b7280;margin-top:4px;">
+                    Somatório de horas trabalhadas no período.
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="pd-card py-3">
+                <div style="font-size:.75rem;font-weight:600;color:#9ca3af;letter-spacing:.18em;">
+                    INTERVALOS
+                </div>
+                <div style="font-size:1.6rem;font-weight:700;color:#0ea5e9;margin-top:4px;">
+                    {{ totais.intervalo }}
+                </div>
+                <div style="font-size:.78rem;color:#6b7280;margin-top:4px;">
+                    Pausas registradas entre as jornadas.
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="pd-card py-3">
+                <div style="font-size:.75rem;font-weight:600;color:#9ca3af;letter-spacing:.18em;">
+                    HORAS EXTRAS
+                </div>
+                <div style="font-size:1.6rem;font-weight:700;color:#dc2626;margin-top:4px;">
+                    {{ totais.extras }}
+                </div>
+                <div style="font-size:.78rem;color:#6b7280;margin-top:4px;">
+                    Diferença acima da jornada diária esperada.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- “Gráfico” simplificado + tabela -->
+    <div class="row g-4">
+        <!-- Coluna esquerda: “cards de barras” por dia -->
+        <div class="col-lg-4">
+            <div class="pd-card h-100">
+                <div style="font-size:.8rem;font-weight:600;color:#6b7280;letter-spacing:.16em;text-transform:uppercase;">
+                    Visão rápida
+                </div>
+                <div style="font-size:.9rem;color:#4b5563;margin-top:4px;margin-bottom:12px;">
+                    Distribuição das horas por dia dentro do período.
+                </div>
+
+                <div class="d-flex flex-column gap-2" style="max-height:380px;overflow:auto;">
+                    {% for jornada in jornadas %}
+                        <div>
+                            <div class="d-flex justify-content-between" style="font-size:.8rem;">
+                                <span style="color:#4b5563;font-weight:600;">
+                                    {{ jornada.data }}
+                                </span>
+                                <span style="color:#6b7280;">
+                                    {{ jornada.total_trabalhado_fmt }}
+                                </span>
+                            </div>
+                            <div class="mt-1" style="height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
+                                {% comment %}
+                                Não temos percentual, então usamos um tamanho relativo simples:
+                                mais horas extras => barra mais longa com cor mais intensa.
+                                {% endcomment %}
+                                {% if jornada.horas_extras and jornada.horas_extras.total_seconds > 0 %}
+                                    <div style="width: 90%;height:100%;background:#f97316;"></div>
+                                {% else %}
+                                    <div style="width: 60%;height:100%;background:#4ade80;"></div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna direita: tabela analítica -->
+        <div class="col-lg-8">
+            <div class="pd-card p-0" style="overflow:hidden;">
+                <div class="d-flex justify-content-between align-items-center px-4 py-3"
+                     style="border-bottom:1px solid #f3f4f6;">
+                    <div>
+                        <div style="font-size:.8rem;font-weight:600;color:#6b7280;letter-spacing:.16em;text-transform:uppercase;">
+                            Detalhamento diário
+                        </div>
+                        <div style="font-size:.9rem;color:#4b5563;">
+                            Jornada esperada x realizada em cada dia.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="pd-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Total trabalhado</th>
+                                <th>Intervalo</th>
+                                <th>Horas extras</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for jornada in jornadas %}
+                                <tr>
+                                    <td>
+                                        <div style="font-weight:600;">
+                                            {{ jornada.data }}
+                                        </div>
+                                    </td>
+                                    <td>{{ jornada.total_trabalhado_fmt }}</td>
+                                    <td>{{ jornada.total_intervalo_fmt }}</td>
+                                    <td>
+                                        {% if jornada.horas_extras and jornada.horas_extras.total_seconds > 0 %}
+                                            <span class="pd-badge pd-badge-danger">
+                                                <i class="bi bi-clock-history"></i>
+                                                {{ jornada.horas_extras_fmt }}
+                                            </span>
+                                        {% else %}
+                                            <span class="pd-badge pd-badge-success">
+                                                <i class="bi bi-check-circle"></i>
+                                                Sem extras
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+{% elif funcionario_id %}
+    <!-- Caso filtrou e não veio nada -->
+    <div class="pd-card">
+        <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center justify-content-center rounded-4"
+                 style="width:36px;height:36px;background:#fee2e2;color:#b91c1c;">
+                <i class="bi bi-exclamation-circle"></i>
+            </div>
+            <div>
+                <div style="font-weight:600;font-size:.9rem;">Nenhuma jornada encontrada</div>
+                <div style="font-size:.85rem;color:#6b7280;">
+                    Ajuste o intervalo de datas ou selecione outro colaborador.
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}
