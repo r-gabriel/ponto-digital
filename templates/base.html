@@ -358,6 +358,178 @@
             .pd-sidebar-footer span { display: none; }
             .pd-content, .pd-topbar { margin-left: 72px; left: 72px; }
         }
+        @media (max-width: 900px){
+            .pd-sidebar { width: 72px; padding: 16px 8px; }
+
+    
+            .pd-sidebar-logo-text,
+    
+            .pd-sidebar-user-name,
+    
+            .pd-sidebar-user-role,
+    
+            .pd-nav-section,
+    
+            .pd-nav-link span,
+    
+            .pd-sidebar-footer span {
+       
+                display: none;
+    
+            }
+
+    
+            .pd-content,
+    
+            .pd-topbar {
+       
+                margin-left: 72px;
+       
+                left: 72px;
+   
+   
+            }
+
+        }
+
+        
+        /* ─ Dark Mode ─ */
+
+
+        .dark-btn{
+    
+            width:42px;
+            height:42px;
+            border:none;
+            border-radius:14px;
+            background:#111827;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            transition:.3s;
+            cursor:pointer;
+
+        }
+
+
+        .dark-btn:hover{
+    
+            transform:scale(1.05);
+    
+            background:#1f2937;
+
+        }
+
+
+        /* Tema escuro */
+
+
+        body.dark-mode{
+    
+            background:#0f172a;
+    
+            color:#f9fafb;
+
+        }
+
+
+        /* Topbar */
+
+
+        body.dark-mode .pd-topbar{
+    
+            background:#111827;
+    
+            border-color:#1f2937;
+
+        }
+
+
+        /* Cards */
+
+
+        body.dark-mode .pd-card{
+    
+            background:#1e293b;
+    
+            color:#f9fafb;
+
+        }
+
+
+        /* Tabelas */
+
+
+        body.dark-mode .pd-table thead th{
+    
+            background:#312e81;
+    
+            color:#fff;
+
+        }
+
+
+        body.dark-mode .pd-table tbody td{
+    
+            border-color:#334155;
+
+        }
+
+
+        body.dark-mode .pd-table tbody tr:hover{
+    
+            background:#1e293b;
+
+        }
+
+
+        /* Inputs */
+
+
+        body.dark-mode .form-control,
+
+        body.dark-mode .form-select{
+    
+            background:#0f172a;
+            border-color:#334155;
+            color:#fff;
+
+        }
+
+
+        /* Textos */
+
+
+        body.dark-mode .pd-topbar-right,
+
+        body.dark-mode .form-label{
+    
+            color:#cbd5e1 !important;
+
+        }
+
+
+        /* Transições */
+
+
+        body,
+
+        .pd-card,
+
+        .pd-topbar,
+
+        .pd-table,
+
+        .form-control,
+
+        .form-select{
+    
+            transition:all .3s ease;
+
+        }
+
+
     </style>
 </head>
 <body>
@@ -436,6 +608,12 @@
             {% block topbar_actions %}{% endblock %}
             <div class="pd-topbar-right" id="topbar-clock"></div>
         </div>
+
+        <button id="darkModeToggle" class="dark-btn">
+            <i class="bi bi-moon-fill"></i>
+
+        </button>
+
     </header>
 
 {% endif %}
@@ -457,16 +635,63 @@
 
 <script>
     function updateTopClock() {
+    
         const el = document.getElementById('topbar-clock');
         if (!el) return;
         const now = new Date();
         const hh = String(now.getHours()).padStart(2,'0');
         const mm = String(now.getMinutes()).padStart(2,'0');
+        
         el.textContent = hh + ':' + mm;
     }
     setInterval(updateTopClock, 30000);
     updateTopClock();
+
+    /* dark mode */
+
+    const toggleBtn = document.getElementById('darkModeToggle');
+
+    toggleBtn.addEventListener('click', () => {
+
+        document.body.classList.toggle('dark-mode');
+
+        const icon = toggleBtn.querySelector('i');
+
+        if(document.body.classList.contains('dark-mode')){
+
+            localStorage.setItem('theme', 'dark');
+
+            icon.classList.remove('bi-moon-fill');
+
+            icon.classList.add('bi-sun-fill');
+
+        } else {
+
+            localStorage.setItem('theme', 'light');
+
+            icon.classList.remove('bi-sun-fill');
+
+            icon.classList.add('bi-moon-fill');
+        }
+    });
+
+
+    /* carregar tema salvo */
+
+    if(localStorage.getItem('theme') === 'dark'){
+
+        document.body.classList.add('dark-mode');
+
+        const icon = toggleBtn.querySelector('i');
+
+        icon.classList.remove('bi-moon-fill');
+
+        icon.classList.add('bi-sun-fill');
+    }
+
+    
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
