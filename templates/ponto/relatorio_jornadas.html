@@ -53,7 +53,7 @@
 
 {% if jornadas %}
 
-    <!-- Cards de resumo (tipo dashboard) -->
+    <!-- Cards de resumo -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="pd-card py-3">
@@ -96,9 +96,18 @@
         </div>
     </div>
 
-    <!-- “Gráfico” simplificado + tabela -->
+    <!-- Botão exportar PDF -->
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'exportar_relatorio_pdf' %}?funcionario={{ funcionario_id }}&data_inicial={{ data_inicial }}&data_final={{ data_final }}"
+           class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
+        </a>
+    </div>
+
+    <!-- Visão rápida + tabela analítica -->
     <div class="row g-4">
-        <!-- Coluna esquerda: “cards de barras” por dia -->
+
+        <!-- Coluna esquerda: barras por dia -->
         <div class="col-lg-4">
             <div class="pd-card h-100">
                 <div style="font-size:.8rem;font-weight:600;color:#6b7280;letter-spacing:.16em;text-transform:uppercase;">
@@ -120,14 +129,10 @@
                                 </span>
                             </div>
                             <div class="mt-1" style="height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
-                                {% comment %}
-                                Não temos percentual, então usamos um tamanho relativo simples:
-                                mais horas extras => barra mais longa com cor mais intensa.
-                                {% endcomment %}
                                 {% if jornada.horas_extras and jornada.horas_extras.total_seconds > 0 %}
-                                    <div style="width: 90%;height:100%;background:#f97316;"></div>
+                                    <div style="width:90%;height:100%;background:#f97316;border-radius:999px;"></div>
                                 {% else %}
-                                    <div style="width: 60%;height:100%;background:#4ade80;"></div>
+                                    <div style="width:60%;height:100%;background:#4ade80;border-radius:999px;"></div>
                                 {% endif %}
                             </div>
                         </div>
@@ -187,15 +192,31 @@
                                 </tr>
                             {% endfor %}
                         </tbody>
+
+                        <!-- Linha de totais -->
+                        <tfoot>
+                            <tr style="background:#f9fafb;font-weight:700;border-top:2px solid #e5e7eb;">
+                                <td style="padding:10px 16px;color:#4b5563;">TOTAL</td>
+                                <td style="padding:10px 16px;color:#4c1d95;">
+                                    {{ totais.trabalhado }}
+                                </td>
+                                <td style="padding:10px 16px;color:#0ea5e9;">
+                                    {{ totais.intervalo }}
+                                </td>
+                                <td style="padding:10px 16px;color:#dc2626;">
+                                    {{ totais.extras }}
+                                </td>
+                            </tr>
+                        </tfoot>
+
                     </table>
                 </div>
-
             </div>
         </div>
     </div>
 
 {% elif funcionario_id %}
-    <!-- Caso filtrou e não veio nada -->
+    <!-- Filtrou e não encontrou resultados -->
     <div class="pd-card">
         <div class="d-flex align-items-center gap-2">
             <div class="d-flex align-items-center justify-content-center rounded-4"
