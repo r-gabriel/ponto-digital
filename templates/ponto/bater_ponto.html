@@ -31,14 +31,79 @@
                 </div>
             </div>
 
+            <!-- Status do último registro / próxima ação -->
+            {% if ultimo %}
+            <div class="pd-card mb-4 text-start"
+                 style="border-radius:16px;background:#f9fafb;border:1px solid #e5e7eb;">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+                    <!-- Último registro -->
+                    <div>
+                        <div style="font-size:.75rem;font-weight:600;color:#9ca3af;
+                                    letter-spacing:.16em;text-transform:uppercase;">
+                            Último registro
+                        </div>
+                        <div style="font-size:1rem;font-weight:600;color:#4b5563;margin-top:4px;">
+                            <i class="bi bi-clock-history me-1"></i>
+                            {{ ultimo.get_tipo_display }}
+                            em
+                            {{ ultimo.data_hora|date:"d/m/Y" }}
+                            às
+                            {{ ultimo.data_hora|time:"H:i" }}
+                        </div>
+                    </div>
+
+                    <!-- Próxima ação esperada -->
+                    <div class="text-end">
+                        <div style="font-size:.75rem;font-weight:600;color:#9ca3af;
+                                    letter-spacing:.16em;text-transform:uppercase;">
+                            Próxima ação
+                        </div>
+                        <div style="margin-top:4px;">
+                            {% if proximo_tipo == 'E' %}
+                                <span class="pd-badge pd-badge-success"
+                                      style="font-size:.9rem;padding:6px 12px;">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i> Entrada
+                                </span>
+                            {% else %}
+                                <span class="pd-badge pd-badge-danger"
+                                      style="font-size:.9rem;padding:6px 12px;">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Saída
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            {% else %}
+            <div class="pd-card mb-4 text-start"
+                 style="border-radius:16px;background:#eff6ff;border:1px solid #dbeafe;">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center justify-content-center rounded-4"
+                         style="width:36px;height:36px;background:#dbeafe;color:#1d4ed8;">
+                        <i class="bi bi-info-circle"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;font-size:.9rem;">Nenhum registro ainda</div>
+                        <div style="font-size:.85rem;color:#6b7280;">
+                            Registre sua primeira entrada do dia.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Botões -->
             <form method="post">
                 {% csrf_token %}
                 <div class="d-grid gap-3">
-                    <button type="submit" name="tipo" value="E" class="btn btn-entrada w-100 py-4" style="font-size:1.4rem;font-weight:800;border-radius:20px; margin-bottom:15px;">
+                    <button type="submit" name="tipo" value="E" class="btn btn-entrada w-100 py-4"
+                            style="font-size:1.4rem;font-weight:800;border-radius:20px; margin-bottom:15px;">
                         <i class="bi bi-box-arrow-in-right me-2"></i> Registrar Entrada
                     </button>
-                    <button type="submit" name="tipo" value="S" class="btn btn-saida w-100 py-4" style="font-size:1.4rem;font-weight:800;border-radius:20px;">
+                    <button type="submit" name="tipo" value="S" class="btn btn-saida w-100 py-4"
+                            style="font-size:1.4rem;font-weight:800;border-radius:20px;">
                         <i class="bi bi-box-arrow-right me-2"></i> Registrar Saída
                     </button>
                 </div>
@@ -49,7 +114,7 @@
 </div>
 
 <script>
-    
+
     const DIAS = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
     const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 
