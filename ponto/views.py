@@ -89,8 +89,23 @@ def bater_ponto(request):
             messages.success(request, f'{tipo_label} registrada com sucesso.')
             return redirect('bater_ponto')
 
-    # GET — sempre retorna o template
-    return render(request, 'ponto/bater_ponto.html')
+    # GET — busca último registro para exibir no template
+    ultimo = (
+        RegistroPonto.objects
+        .filter(funcionario=request.user)
+        .order_by('-data_hora')
+        .first()
+    )
+
+    if ultimo:
+        proximo_tipo = 'S' if ultimo.tipo == 'E' else 'E'
+    else:
+        proximo_tipo = 'E'
+
+    return render(request, 'ponto/bater_ponto.html', {
+        'ultimo': ultimo,
+        'proximo_tipo': proximo_tipo,
+    })
 
 
 # ── Histórico ────────────────────────────────────────────────────────────
